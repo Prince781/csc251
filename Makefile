@@ -19,7 +19,7 @@ VERILATOR_ALLOW_WARNINGS=1
 ECE_401_TESTS=http://www.cs.rochester.edu/~swang/ece401/ece401-tests.tar.xz
 
 #What verilator to use
-VERILATOR_VER=3.876
+VERILATOR_VER=4.004
 #How to untar verilator (change if not using a .tgz source)
 VERILATOR_UNTAR_OPTIONS=-xzf
 VERILATOR_REL_PATH=./
@@ -37,7 +37,7 @@ VERILOG_FILES=$(wildcard verilog/*.v)
 VERILATOR_BIN=${VERILATOR_DIR}/bin/verilator
 UNAME:=$(shell uname)
 SM_FLAGS=-O3
-VFLAGS+=--autoflush -O4 -Wall #-Wno-fatal
+VFLAGS+=--autoflush -O4 -Wall --l2-name v #-Wno-fatal
 ifeq ($(VERILATOR_ALLOW_WARNINGS),1)
 VFLAGS+=-Wno-fatal
 endif
@@ -70,7 +70,7 @@ obj_dir/VMIPS.mk : ${VERILATOR_BIN} ${SIM_FILES} ${VERILOG_FILES}
 	VERILATOR_ROOT=$(shell pwd)/${VERILATOR_DIR} ${VERILATOR_BIN} ${VFLAGS} -CFLAGS "${SM_FLAGS}" -cc verilog/MIPS.v -I./verilog/ --exe ${SIM_FILES}
 
 ${VERILATOR_BIN} : ${VERILATOR_DIR}/Makefile
-	$(MAKE) -C ${VERILATOR_DIR}/src ${MAKEFLAGS} ../verilator_bin
+	$(MAKE) -C ${VERILATOR_DIR} ${MAKEFLAGS} verilator_bin
 
 ${VERILATOR_DIR}/Makefile : ${VERILATOR_DIR}/configure
 	cd ${VERILATOR_DIR} && ./configure
