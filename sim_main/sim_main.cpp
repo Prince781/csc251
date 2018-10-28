@@ -820,11 +820,11 @@ int main(int argc, char **argv)
 			if(top->iBlkRead) {
 				int i;
 				for(i = 0; i < 8; i++) {
-					top->block_read_fIM[7-i] = readWord(top->Instr_address_2IM + (i*4));
+					top->block_read_fIM[7-i] = readWord((top->Instr_address_2IM & 0xFFFFFFE0) + (i*4));
 				}
 				top->block_read_fIM_valid = mem_process_request(&icache_fsm, &icache_last_addr, top->Instr_address_2IM);
 				if(top->block_read_fIM_valid) {
-					printf("Processed iRead from 0x%08x, read values:\n", top->Instr_address_2IM);
+					printf("Processed iRead from 0x%08x, read values:\n", (top->Instr_address_2IM & 0xFFFFFFE0));
 					for(i = 0; i < 8; i++) {
 						printf("%08x",top->block_read_fIM[7-i]);
 					}

@@ -1,8 +1,8 @@
 `include "config.v"
 /**************************************
 * Module: Fetch
-* Date:2013-11-24  
-* Author: isaac     
+* Date:2013-11-24
+* Author: isaac
 *
 * Description: Master Instruction Fetch Module
 ***************************************/
@@ -10,37 +10,41 @@ module  IF
 (
     input CLK,
     input RESET,
-    
+
     //This should contain the fetched instruction
     output reg [31:0] Instr1_OUT,
     //This should contain the address of the fetched instruction [DEBUG purposes]
     output reg [31:0] Instr_PC_OUT,
     //This should contain the address of the instruction after the fetched instruction (used by ID)
     output reg [31:0] Instr_PC_Plus4,
-    
+
     //Will be set to true if we need to just freeze the fetch stage.
     input STALL,
-    
+
     //There was probably a branch -- please load the alternate PC instead of Instr_PC_Plus4.
     input Request_Alt_PC,
     //Alternate PC to load
     input [31:0] Alt_PC,
-    
+
     //Address from which we want to fetch an instruction
     output [31:0] Instr_address_2IM,
     //Instruction received from instruction memory
-    input [31:0]   Instr1_fIM
+    input [31:0]   Instr1_fIM,
+
+    input [1:0] Valid
 );
 
     wire [31:0] IncrementAmount;
     assign IncrementAmount = 32'd4; //NB: This might get modified for superscalar.
-    
+
 `ifdef INCLUDE_IF_CONTENT
     assign Instr_address_2IM = (Request_Alt_PC)?Alt_PC:Instr_PC_Plus4;
 `else
     assign Instr_address_2IM = Instr_PC_Plus4;  //Are you sure that this is correct?
 `endif
-    
+
+
+
 
 always @(posedge CLK or negedge RESET) begin
     if(!RESET) begin
@@ -49,7 +53,7 @@ always @(posedge CLK or negedge RESET) begin
         Instr_PC_Plus4 <= 32'hBFC00000;
         $display("FETCH [RESET] Fetching @%x", Instr_PC_Plus4);
     end else if(CLK) begin
-        if(!STALL) begin
+        if(!STALL && Valid == 1) begin
                 Instr1_OUT <= Instr1_fIM;
                 Instr_PC_OUT <= Instr_address_2IM;
 `ifdef INCLUDE_IF_CONTENT
@@ -63,9 +67,10 @@ always @(posedge CLK or negedge RESET) begin
 `endif
         end else begin
             $display("FETCH: Stalling; next request will be %x",Instr_address_2IM);
+            $display("FETCH: Plus 4 is %x",Instr_PC_Plus4);
+            $display("FETCH:ReqAlt[%d]=%x",Request_Alt_PC,Alt_PC);
         end
     end
 end
 
 endmodule
-
