@@ -6,6 +6,7 @@ module compare(	Jump,
 		OpA,
 		OpB,
 		Instr_input,
+		Instr_addr,
 		taken
 		);
 
@@ -16,10 +17,11 @@ module compare(	Jump,
 	input      [31: 0] OpA; // operand a
 	input      [31: 0] OpB; // operand b
 	input      [31: 0] Instr_input;	 // instruction
+	input      [31: 0] Instr_addr;
 	input	           Jump; // if we plan to jump
 
 	reg               br_taken; // if we are taking the branch
-	
+
 	assign taken=br_taken|Jump; //if we jump, we always take the branch
 
 	always @(Instr_input or OpA or OpB) begin
@@ -30,7 +32,7 @@ module compare(	Jump,
 					5'b00001,5'b10001:br_taken=(OpA[31]==0)?1'b1:1'b0;	//BGEZ,BGEZAL // appears correct
 					default: br_taken=1'b0; // not actually branching
 				endcase
-			end			
+			end
 			6'b000100:br_taken=(OpA==OpB)?1'b1:1'b0;						//BEQ //ops look correct
 			6'b000101:br_taken=(OpA!=OpB)?1'b1:1'b0;						//BNE // ops look correct
 			6'b000110:br_taken=((OpA[31]==1)||(OpA==0))?1'b1:1'b0;				//BLEZ // ops look correct
@@ -39,6 +41,7 @@ module compare(	Jump,
 			end
 			default:br_taken=1'b0; // default, don't branch
 		endcase
+		$display("compare: br_taken=%x, OpA=%x, OpB=%x, Instr_input=%x, Instr_addr=%x", br_taken, OpA, OpB, Instr_input, Instr_addr);
 	end
 
 endmodule

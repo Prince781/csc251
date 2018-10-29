@@ -162,6 +162,7 @@ module MIPS (
     wire        BypassValid1_MEMID;
 `endif
 
+
 	ID ID(
 		.CLK(CLK),
 		.RESET(RESET),
@@ -171,7 +172,6 @@ module MIPS (
 		.WriteRegister1_IN(WriteRegister1_MEMWB),
 		.WriteData1_IN(WriteData1_MEMWB),
 		.RegWrite1_IN(RegWrite1_MEMWB),
-    .Valid(valid),
 		.Alt_PC(Alt_PC_IDIF),
 		.Request_Alt_PC(Request_Alt_PC_IDIF),
 		.Instr1_OUT(Instr1_IDEXE),
@@ -306,7 +306,6 @@ module MIPS (
         .ALU_Control1_IN(ALU_Control1_EXEMEM),
         .MemRead1_IN(MemRead1_EXEMEM),
         .MemWrite1_IN(MemWrite1_EXEMEM),
-        .Valid_ICACHE(valid),
         .WriteRegister1_OUT(WriteRegister1_MEMWB),
         .RegWrite1_OUT(RegWrite1_MEMWB),
         .WriteData1_OUT(WriteData1_MEMWB),
