@@ -71,8 +71,8 @@ always @(posedge CLK or negedge RESET) begin
 `endif
             end
             else begin
-                Instr1_OUT <= 0;
-                Instr_address_2IM = Instr_address_old;
+                //Instr1_OUT <= 0;
+                //Instr_address_2IM = Instr_address_old;
                 Instr_PC_Plus4 <= Instr_address_2IM;
                 $display("FETCH: Waiting; next request will be %x",Instr_address_2IM);
                 $display("FETCH: Plus 4 is %x",Instr_PC_Plus4);

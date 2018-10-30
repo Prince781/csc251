@@ -35,6 +35,9 @@ module ID(
 	 //Actually write to register file?
 	 input RegWrite1_IN,
 
+   //Cache valid
+   input [1:0] Cache_ready,
+
 	 //Alternate PC for next fetch (branch/jump destination)
     output reg [31:0]Alt_PC,
     //Actually use alternate PC
@@ -276,7 +279,7 @@ RegFile RegFile (
      assign WANT_FREEZE = ((FORCE_FREEZE | syscal1) && !INHIBIT_FREEZE);
 
 always @(posedge CLK or negedge RESET) begin
-	if(!RESET) begin
+	if(!RESET || !Cache_ready) begin
 		Alt_PC <= 0;
 		Request_Alt_PC <= 0;
 		Instr1_OUT <= 0;
@@ -347,7 +350,6 @@ always @(posedge CLK or negedge RESET) begin
 					end
 				10,
 				0: begin
-					//$display("ID: send instr");
                     Instr1_OUT <= Instr1_IN;
                     OperandA1_OUT <= OpA1;
                     OperandB1_OUT <= OpB1;
@@ -363,10 +365,7 @@ always @(posedge CLK or negedge RESET) begin
                     Instr1_PC_OUT <= Instr_PC_IN;
 					end
 			endcase
-			/*if (RegWrite_IN) begin
-				Reg[WriteRegister_IN] <= WriteData_IN;
-				$display("IDWB:Reg[%d]=%x",WriteRegister_IN,WriteData_IN);
-			end*/
+
 			if(comment1) begin
                 $display("ID1:Instr=%x,Instr_PC=%x,Req_Alt_PC=%d:Alt_PC=%x;SYS=%d(%d),link1=%x,rs1=%x,rsval1=%x,Request_Alt_PC1=%x",Instr1_IN,Instr_PC_IN,Request_Alt_PC1,Alt_PC1,syscal1,syscall_bubble_counter,link1,rs1,rsval1,Request_Alt_PC1);
                 //$display("ID1:A:Reg[%d]=%x; B:Reg[%d]=%x; Write?%d to %d",RegA1, OpA1, RegB1, OpB1, (WriteRegister1!=5'd0)?RegWrite1:1'd0, WriteRegister1);

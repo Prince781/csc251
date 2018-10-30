@@ -113,6 +113,10 @@ module MIPS (
         .block_read_fIC(unused_i1),
         .block_read_valid(unused_i2),
         .Instr1_OUT(Instr1_fIC),
+        .Instr_address_OUT(Instr_address_2IC),
+        .Instr_PC_Plus4_OUT(Instr_PC_Plus4_IFID),
+        .Request_Alt_PC_OUT(Request_Alt_PC_IDIF),
+        .Alt_PC_OUT(Alt_PC_IDIF),
         .valid(valid)
     );
 
@@ -172,6 +176,7 @@ module MIPS (
 		.WriteRegister1_IN(WriteRegister1_MEMWB),
 		.WriteData1_IN(WriteData1_MEMWB),
 		.RegWrite1_IN(RegWrite1_MEMWB),
+    .Cache_ready(valid),
 		.Alt_PC(Alt_PC_IDIF),
 		.Request_Alt_PC(Request_Alt_PC_IDIF),
 		.Instr1_OUT(Instr1_IDEXE),
