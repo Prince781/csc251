@@ -12,6 +12,7 @@ module DCACHE
   input Dcache_flush,
   output reg [31:0]   Data_read,
   output reg [255:0] Block_write,
+  output [31:0] Data_address_OUT,
   output [1:0] valid
 );
 
@@ -77,7 +78,9 @@ always @(posedge CLK or negedge RESET) begin
         if (block_read_valid) begin
           if (cache_table_set1[index][273] == 0) begin
             if (cache_table_set1[index][275] == 1) begin
-              // TODO: Write back
+              // TODO: Verify if this is enough for writeback
+              Block_write = cache_table_set1[index];
+              Data_address_OUT = Data_address_write & 32'hFFFFFFE0;
             end
             cache_table_set1[index] = block_read_fIC;
             cache_table_set1[index][272:256] = tag;
@@ -86,7 +89,9 @@ always @(posedge CLK or negedge RESET) begin
           end
           else begin
             if (cache_table_set2[index][275] == 1) begin
-              // TODO: Write back
+              // TODO: Verify if this is enough for writeback
+              Block_write = cache_table_set2[index];
+              Data_address_OUT = Data_address_write & 32'hFFFFFFE0;
             end
             cache_table_set2[index] = block_read_fIC;
             cache_table_set2[index][272:256] = tag;
@@ -104,6 +109,9 @@ always @(posedge CLK or negedge RESET) begin
           penalty = 0;
           valid = 1;
           $display("dCache miss finished loading. Addr: %x, Line: %274x, Word: %x", Data_address_2IC, cache_line, cache_word);
+        end
+        if (penalty == 0) begin
+          Data_address_OUT = Data_address_read & 32'hFFFFFFE0;
         end
         else begin
           penalty = penalty + 1;
@@ -144,7 +152,9 @@ always @(posedge CLK or negedge RESET) begin
         if (block_read_valid) begin
           if (cache_table_set1[index][273] == 0) begin
             if (cache_table_set1[index][275] == 1) begin
-              // TODO: Write back
+              // TODO: Verify that this is enough for writeback
+              Block_write = cache_table_set1[index];
+              Data_address_OUT = Data_address_write & 32'hFFFFFFE0;
             end
             cache_table_set1[index] = block_read_fIC;
             cache_table_set1[index][255- 8 * offset -: 32] = Write_data;
@@ -155,7 +165,9 @@ always @(posedge CLK or negedge RESET) begin
           end
           else begin
             if (cache_table_set2[index][275] == 1) begin
-              // TODO: Write back
+              // TODO: Verify that this is enough for writeback
+              Block_write = cache_table_set1[index];
+              Data_address_OUT = Data_address_write & 32'hFFFFFFE0;
             end
             cache_table_set2[index] = block_read_fIC;
             cache_table_set2[index][255- 8 * offset -: 32] = Write_data;
@@ -170,6 +182,8 @@ always @(posedge CLK or negedge RESET) begin
           valid = 1;
           $display("dCache miss finished loading. Addr: %x, Line: %274x, Word: %x", Data_address_2IC, cache_line, cache_word);
         end
+        if (penalty == 0) begin
+          Data_address_OUT = Data_address_read & 32'hFFFFFFE0;
         else begin
           penalty = penalty + 1;
           valid = 0;
