@@ -15,7 +15,7 @@ module DCACHE
   output [1:0] valid
 );
 
-// Size (275) = dirty bit (1) + valid bit (1) + recently used bit (1) + tag(17) +  data (256)
+// Size (276) = dirty bit (1) + valid bit (1) + recently used bit (1) + tag(17) +  data (256)
 reg [275:0] cache_table_set1 [511:0];
 reg [275:0] cache_table_set2 [511:0];
 wire [9:0] index;
@@ -82,7 +82,7 @@ always @(posedge CLK or negedge RESET) begin
             cache_table_set1[index] = block_read_fIC;
             cache_table_set1[index][272:256] = tag;
             cache_table_set1[index][273] = 1;
-            cache_table_set1[index][274] = 0;
+            cache_table_set1[index][274] = 1;
           end
           else begin
             if (cache_table_set2[index][275] == 1) begin
@@ -91,7 +91,7 @@ always @(posedge CLK or negedge RESET) begin
             cache_table_set2[index] = block_read_fIC;
             cache_table_set2[index][272:256] = tag;
             cache_table_set2[index][273] = 1;
-            cache_table_set2[index][274] = 0;
+            cache_table_set2[index][274] = 1;
           end
         end
         if (penalty >= 10) begin
@@ -124,17 +124,19 @@ always @(posedge CLK or negedge RESET) begin
         if (tag == cache_line_set1[272:256]) begin
           //Instr1_OUT = cache_word_set1;
           cache_word_set1 = Write_data;
+          cache_line_set1[275] = 1;
           cache_line_set1[273] = 1;
           cache_line_set2[273] = 0;
         end
         else begin
-          Instr1_OUT = cache_word_set2;
+          cache_word_set2 = Write_data;
+          cache_line_set2[275] = 1;
           cache_line_set2[273] = 1;
           cache_line_set1[273] = 0;
         end
         penalty = 0;
         valid = 1;
-        $display("dCache hit finished loading. Addr: %x, Line: %274x, Word: %x", Data_address_2IC, cache_line, cache_word);
+        $display("dCache hit finished writing. Addr: %x, Line: %274x, Word: %x", Data_address_2IC, cache_line, cache_word);
 
       end
       else begin
@@ -145,27 +147,25 @@ always @(posedge CLK or negedge RESET) begin
               // TODO: Write back
             end
             cache_table_set1[index] = block_read_fIC;
+            cache_table_set1[index][255- 8 * offset -: 32] = Write_data;
             cache_table_set1[index][272:256] = tag;
             cache_table_set1[index][273] = 1;
-            cache_table_set1[index][274] = 0;
+            cache_table_set1[index][274] = 1;
+            cache_table_set1[index][275] = 1;
           end
           else begin
             if (cache_table_set2[index][275] == 1) begin
               // TODO: Write back
             end
             cache_table_set2[index] = block_read_fIC;
+            cache_table_set2[index][255- 8 * offset -: 32] = Write_data;
             cache_table_set2[index][272:256] = tag;
             cache_table_set2[index][273] = 1;
-            cache_table_set2[index][274] = 0;
+            cache_table_set2[index][274] = 1;
+            cache_table_set2[index][275] = 1;
           end
         end
         if (penalty >= 10) begin
-          // Actual memory operation
-
-          assign cache_line = cache_table_set1[index];
-          assign cache_word = cache_line[255- 8 * offset -: 32];
-
-          Instr1_OUT = cache_word;
           penalty = 0;
           valid = 1;
           $display("dCache miss finished loading. Addr: %x, Line: %274x, Word: %x", Data_address_2IC, cache_line, cache_word);
