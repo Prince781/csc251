@@ -10,13 +10,14 @@ module RegValue2#(
     input [4:0] WriteRegister2ndPri1,
     input [31:0] WriteData2ndPri1,
     input        Valid2ndPri1,
+    input [31:0] Instr_addr,
     output [31:0] Output1,
     input comment
     );
-	 
+
     wire [31:0] TempOut1;
-	 
-	 RegValue1 #( 
+
+	 RegValue1 #(
 	 .NAME({NAME,".2nd"})
 	 )
 	 RV1(
@@ -25,10 +26,11 @@ module RegValue2#(
 	 	.WriteRegister1stPri1(WriteRegister2ndPri1),
 	 	.WriteData1stPri1(WriteData2ndPri1),
 	 	.Valid1stPri1(Valid2ndPri1),
+    .Instr_addr(Instr_addr),
 	 	.Output1(TempOut1),
 	 	.comment(comment)
 	 );
-	 
+
      RegValue1  #(
      .NAME({NAME,".1st"})
      )RV2(
@@ -37,10 +39,11 @@ module RegValue2#(
         .WriteRegister1stPri1(WriteRegister1stPri1),
         .WriteData1stPri1(WriteData1stPri1),
         .Valid1stPri1(Valid1stPri1),
+        .Instr_addr(Instr_addr),
         .Output1(Output1),
         .comment(comment)
      );
-//   
+//
 //always begin
 //  if(ReadRegister1 != 0) begin
 //      if(Valid1stPri1 && (ReadRegister1 == WriteRegister1stPri1)) begin

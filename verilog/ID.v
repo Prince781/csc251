@@ -151,6 +151,7 @@ RegValue3 RegJumpValue1 (
     .WriteRegister3rdPri1(WriteRegister1_IN),
     .WriteData3rdPri1(WriteData1_IN),
 	 .Valid3rdPri1(RegWrite1_IN),
+   .Instr_addr(Instr_PC_IN),
     .Output1(rsval_jump1),
 	 .comment(1'b0)
     );
@@ -198,8 +199,9 @@ RegValue3 RegAValue1 (
     .WriteRegister3rdPri1(WriteRegister1_IN),
     .WriteData3rdPri1(WriteData1_IN),
 	 .Valid3rdPri1(RegWrite1_IN),
+   .Instr_addr(Instr_PC_IN),
     .Output1(rsval1),
-	 .comment(1'b0)
+	 .comment(1'b1)
     );
 RegValue3 RegBValue1 (
     .ReadRegister1(rt1),
@@ -213,8 +215,9 @@ RegValue3 RegBValue1 (
     .WriteRegister3rdPri1(WriteRegister1_IN),
     .WriteData3rdPri1(WriteData1_IN),
      .Valid3rdPri1(RegWrite1_IN),
+     .Instr_addr(Instr_PC_IN),
     .Output1(rtval1),
-	 .comment(1'b0)
+	 .comment(1'b1)
     );
 `else
 assign rsval1 = rsRawVal1;

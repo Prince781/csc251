@@ -1,0 +1,2 @@
+ReadW:	00400104 at 00410138	cycle:133
+ReadW:	00400000 at 0041013c	cycle:160

@@ -34,22 +34,14 @@ always @(posedge CLK or negedge RESET) begin
     assign offset = Instr_address_2IC[4:0];
     assign cache_line = cache_table[index];
     assign cache_word = cache_line[255- 8 * offset -: 32];
-    if (penalty <= 1 && cache_line[273]  == 1 && tag == cache_line[272:256]) begin
-      $display("Cache hit. Addr: %x", Instr_address_2IC);
-      //Instr1_OUT = cache_word;
-      if (penalty == 1) begin
-        Instr1_OUT = cache_word;
-        penalty = 0;
-        valid = 1;
-        $display("Cache hit finished loading. Addr: %x, Line: %274x, Word: %x", Instr_address_2IC, cache_line, cache_word);
-      end
-      else begin
-        penalty = 1;
-        valid = 0;
-      end
+    if (penalty <= 1 && cache_line[273]  == 1 && tag == cache_line[272:256] && penalty == 0) begin
+      $display("iCache hit. Addr: %x", Instr_address_2IC);
+      Instr1_OUT = cache_word;
+      valid = 1;
+      $display("iCache hit finished loading. Addr: %x, Line: %274x, Word: %x", Instr_address_2IC, cache_line, cache_word);
     end
     else begin
-      $display("Cache miss. Addr: %x", Instr_address_2IC);
+      $display("iCache miss. Addr: %x", Instr_address_2IC);
       if (block_read_valid) begin
         cache_table[index] = block_read_fIC;
         cache_table[index][272:256] = tag;
@@ -64,7 +56,7 @@ always @(posedge CLK or negedge RESET) begin
         Instr1_OUT = cache_word;
         penalty = 0;
         valid = 1;
-        $display("Cache miss finished loading. Addr: %x, Line: %274x, Word: %x", Instr_address_2IC, cache_line, cache_word);
+        $display("iCache miss finished loading. Addr: %x, Line: %274x, Word: %x", Instr_address_2IC, cache_line, cache_word);
       end
       else begin
         penalty = penalty + 1;

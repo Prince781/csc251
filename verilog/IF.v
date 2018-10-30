@@ -35,7 +35,10 @@ module  IF
 );
 
     wire [31:0] IncrementAmount;
+    reg [31:0] Instr_address_old;
     assign IncrementAmount = 32'd4; //NB: This might get modified for superscalar.
+
+    assign Instr_address_old = Instr_address_2IM;
 
 `ifdef INCLUDE_IF_CONTENT
     assign Instr_address_2IM = (Request_Alt_PC)?Alt_PC:Instr_PC_Plus4;
@@ -53,7 +56,8 @@ always @(posedge CLK or negedge RESET) begin
         Instr_PC_Plus4 <= 32'hBFC00000;
         $display("FETCH [RESET] Fetching @%x", Instr_PC_Plus4);
     end else if(CLK) begin
-        if(!STALL && Valid == 1) begin
+        if(!STALL) begin
+            if (Valid == 1) begin
                 Instr1_OUT <= Instr1_fIM;
                 Instr_PC_OUT <= Instr_address_2IM;
 `ifdef INCLUDE_IF_CONTENT
@@ -65,9 +69,16 @@ always @(posedge CLK or negedge RESET) begin
                 $display("FETCH:Instr@%x=%x;Next@%x",Instr_address_2IM,Instr1_fIM,Instr_address_2IM + IncrementAmount);
                 $display("FETCH:ReqAlt[%d]=%x",Request_Alt_PC,Alt_PC);
 `endif
+            end
+            else begin
+                Instr1_OUT <= 0;
+                Instr_address_2IM = Instr_address_old;
+                Instr_PC_Plus4 <= Instr_address_2IM;
+                $display("FETCH: Waiting; next request will be %x",Instr_address_2IM);
+                $display("FETCH: Plus 4 is %x",Instr_PC_Plus4);
+                $display("FETCH:ReqAlt[%d]=%x",Request_Alt_PC,Alt_PC);
+            end
         end else begin
-            Instr1_OUT <= 0;
-            Instr_PC_Plus4 <= Instr_address_2IM;
             $display("FETCH: Stalling; next request will be %x",Instr_address_2IM);
             $display("FETCH: Plus 4 is %x",Instr_PC_Plus4);
             $display("FETCH:ReqAlt[%d]=%x",Request_Alt_PC,Alt_PC);
