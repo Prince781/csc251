@@ -27,6 +27,28 @@ The 10-cycle miss penalty is achieved by an internal counter that, when nonzero 
 Additionally, \texttt{sim\_main.cpp} was modified at lines 823 and 827 to fetch on aligned addresses.
 
 \section{dCache}
-Implemented in \texttt{verilog/DCACHE.v}, but not integrated with the rest of the MIPS pipeline because we could not get it to work. The dCache was intended to be placed after the MEM stage. 
+Implemented in \texttt{verilog/DCACHE.v}, but not integrated with the rest of the MIPS pipeline because we could not get it to work. The dCache was intended to be placed after the MEM stage.
+
+\section{Programs}
+\begin{tabular}{| c | c | c | c | c |}
+  \hline
+  program & w/o cache & & with i-cache &\\
+  \hline
+  & cycles & IPC & cycles & IPC \\
+  \hline
+  noio & 27700 & 0.0751264 & 4272 & 0.487125\\
+  file & 1307030 & 0.0728484 & 107322 & 0.88719\\
+  hello & 1308960 & 0.0731153 & 106360 & 0.899821\\
+  class & 1328990 & 0.0731209 & 108262 & 0.89761 \\
+  sort & 1436460 & 0.0730435 & 117767 & 0.890946 \\
+  fact12 & 1515830 & 0.0731085 & 123133 & 0.900002\\
+  matrix & 1881850 & 0.0729527 & 153471 & 0.89454 \\
+  hanoi & 2762500 & 0.0730016 & 228402 & 0.882948 \\
+  ical & 2519410 & 0.0859245 & 227704 & 0.950704 \\
+  fib18 & 4207410 & 0.0726692 & 316934 & 0.964709 \\
+  \hline
+\end{tabular}
+
+The baseline (two left columns) is the "uncached" data, when running with the original MIPS pipeline given to us without any modifications.
 
 \end{document}
