@@ -113,10 +113,6 @@ module MIPS (
         .block_read_fIC(unused_i1),
         .block_read_valid(unused_i2),
         .Instr1_OUT(Instr1_fIC),
-        .Instr_address_OUT(Instr_address_2IC),
-        .Instr_PC_Plus4_OUT(Instr_PC_Plus4_IFID),
-        .Request_Alt_PC_OUT(Request_Alt_PC_IDIF),
-        .Alt_PC_OUT(Alt_PC_IDIF),
         .valid(valid)
     );
 

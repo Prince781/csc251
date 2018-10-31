@@ -38,8 +38,6 @@ module  IF
     reg [31:0] Instr_address_old;
     assign IncrementAmount = 32'd4; //NB: This might get modified for superscalar.
 
-    assign Instr_address_old = Instr_address_2IM;
-
 `ifdef INCLUDE_IF_CONTENT
     assign Instr_address_2IM = (Request_Alt_PC)?Alt_PC:Instr_PC_Plus4;
 `else
@@ -57,6 +55,7 @@ always @(posedge CLK or negedge RESET) begin
         $display("FETCH [RESET] Fetching @%x", Instr_PC_Plus4);
     end else if(CLK) begin
         if(!STALL) begin
+            // If caches are ready, proceed normally
             if (Valid == 1) begin
                 Instr1_OUT <= Instr1_fIM;
                 Instr_PC_OUT <= Instr_address_2IM;
@@ -71,8 +70,7 @@ always @(posedge CLK or negedge RESET) begin
 `endif
             end
             else begin
-                //Instr1_OUT <= 0;
-                //Instr_address_2IM = Instr_address_old;
+                // If caches are not ready, don't fetch any new instruction
                 Instr_PC_Plus4 <= Instr_address_2IM;
                 $display("FETCH: Waiting; next request will be %x",Instr_address_2IM);
                 $display("FETCH: Plus 4 is %x",Instr_PC_Plus4);

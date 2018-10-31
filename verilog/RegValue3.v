@@ -13,7 +13,6 @@ module RegValue3 #(
     input [4:0] WriteRegister3rdPri1,
     input [31:0] WriteData3rdPri1,
     input        Valid3rdPri1,
-    input [31:0] Instr_addr,
     output [31:0] Output1,
 	 input comment
     );
@@ -31,7 +30,6 @@ module RegValue3 #(
         .WriteRegister2ndPri1(WriteRegister3rdPri1),
         .WriteData2ndPri1(WriteData3rdPri1),
         .Valid2ndPri1(Valid3rdPri1),
-        .Instr_addr(Instr_addr),
         .Output1(TempOut1),
         .comment(comment)
     );
@@ -44,7 +42,6 @@ module RegValue3 #(
     	.WriteRegister1stPri1(WriteRegister1stPri1),
     	.WriteData1stPri1(WriteData1stPri1),
     	.Valid1stPri1(Valid1stPri1),
-      .Instr_addr(Instr_addr),
     	.Output1(Output1),
     	.comment(comment)
     );

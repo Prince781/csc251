@@ -26,7 +26,6 @@ module RegValue1 #(
     input [4:0] WriteRegister1stPri1,
     input [31:0] WriteData1stPri1,
     input        Valid1stPri1,
-    input [31:0] Instr_addr,
     output [31:0] Output1,
 	 input comment
     );
@@ -43,7 +42,7 @@ module RegValue1 #(
 	 //TODO: Fix commenting
 always @(ReadRegister1 or RegisterData1 or WriteRegister1stPri1 or WriteData1stPri1 or Valid1stPri1)  begin
     if(comment) begin
-        $display("RV%s:Reg[%d] was %x; BypassReg[%d]?%d=%x; PC=%x",NAME,ReadRegister1, RegisterData1, WriteRegister1stPri1,Valid1stPri1,WriteData1stPri1,Instr_addr);
+        $display("RV%s:Reg[%d] was %x; BypassReg[%d]?%d=%x",NAME,ReadRegister1, RegisterData1, WriteRegister1stPri1,Valid1stPri1,WriteData1stPri1);
     end
 end
 

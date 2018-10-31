@@ -154,7 +154,6 @@ RegValue3 RegJumpValue1 (
     .WriteRegister3rdPri1(WriteRegister1_IN),
     .WriteData3rdPri1(WriteData1_IN),
 	 .Valid3rdPri1(RegWrite1_IN),
-   .Instr_addr(Instr_PC_IN),
     .Output1(rsval_jump1),
 	 .comment(1'b0)
     );
@@ -202,7 +201,6 @@ RegValue3 RegAValue1 (
     .WriteRegister3rdPri1(WriteRegister1_IN),
     .WriteData3rdPri1(WriteData1_IN),
 	 .Valid3rdPri1(RegWrite1_IN),
-   .Instr_addr(Instr_PC_IN),
     .Output1(rsval1),
 	 .comment(1'b1)
     );
@@ -218,7 +216,6 @@ RegValue3 RegBValue1 (
     .WriteRegister3rdPri1(WriteRegister1_IN),
     .WriteData3rdPri1(WriteData1_IN),
      .Valid3rdPri1(RegWrite1_IN),
-     .Instr_addr(Instr_PC_IN),
     .Output1(rtval1),
 	 .comment(1'b1)
     );
@@ -279,6 +276,7 @@ RegFile RegFile (
      assign WANT_FREEZE = ((FORCE_FREEZE | syscal1) && !INHIBIT_FREEZE);
 
 always @(posedge CLK or negedge RESET) begin
+  // If caches are not ready, reset ID so that it doesn't do anything
 	if(!RESET || !Cache_ready) begin
 		Alt_PC <= 0;
 		Request_Alt_PC <= 0;
