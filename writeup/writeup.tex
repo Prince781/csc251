@@ -22,12 +22,16 @@ All the files we modified, except for \texttt{sim\_main.cpp}, are in \texttt{ver
 \section{iCache}
 Implemented in \texttt{verilog/ICACHE.v} as a 32 KB read-only direct-mapped cache with 32 B block size. The current PC is used to index into the cache. $ 32KB / 32 B$ is 1024, so the index is 10 bits. Each instruction is 4-byte aligned, so the lower 2 bits can be ignored, while the 3 bits after that will be the number of instructions into the cache entry. Therefore, the lower 5 bits are the offset. This leaves us with $32-10-5 =$ 17 bits for the tag.
 
+The cache table is implemented through an array with size 1024, and each block has the size of 274, including the valid bit with size 1, tag with size 17, and data with size 256. 
+
 The 10-cycle miss penalty is achieved by an internal counter that, when nonzero and less than 10, stalls the IF and ID stages. IF and ID don't proceed if the \texttt{valid} from the iCache is negative.
 
 Additionally, \texttt{sim\_main.cpp} was modified at lines 823 and 827 to fetch on aligned addresses.
 
 \section{dCache}
-Implemented in \texttt{verilog/DCACHE.v}, but not integrated with the rest of the MIPS pipeline because we could not get it to work. The dCache was intended to be placed after the MEM stage.
+Implemented in \texttt{verilog/DCACHE.v}, but not integrated with the rest of the MIPS pipeline because we could not fully integrate it without causing problems. The dCache was intended to be placed after the MEM stage.
+
+Although the dCache module is not integrated with MIPS pipeline, the module itself is complete. The cache table is implemented through two arrays, each representing a set, with size 512 each. Each block has the size of 276, including the dirty bit with size 1, valid bit with size 1, recently used bit with size 1, tag with size 17, and data with size 256. The recently used bit is used when choosing the victom for cache replacement. The dCache uses a Least Recently Used (LRU) cache replacement policy, so when the cache needs to replace a cache block, it will replace the one that is not recently used from the two sets. 
 
 \section{Programs}
 \begin{tabular}{| c | c | c | c | c |}
