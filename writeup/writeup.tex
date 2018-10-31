@@ -1,0 +1,29 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+
+\title{CSC 2/451 - Project 1}
+\author{
+Yufei Du \\
+\texttt{<ydu14@ur.rochester.edu>}
+\and
+Princeton Ferro \\
+\texttt{<pferro@u.rochester.edu>}
+}
+
+\begin{document}
+
+\maketitle
+
+\section{iCache}
+Implemented in \texttt{verilog/ICACHE.v} as a 32 KB read-only direct-mapped cache with 32 B block size. The current PC is used to index into the cache. $ 32KB / 32 B$ is 1024, so the index is 10 bits. Each instruction is 4-byte aligned, so the lower 2 bits can be ignored, while the 3 bits after that will be the number of instructions into the cache entry. Therefore, the lower 5 bits are the offset. This leaves us with $32-10-5 =$ 17 bits for the tag.
+
+The 10-cycle miss penalty is achieved by an internal counter that, when nonzero and less than 10, stalls the IF and ID stages. IF and ID don't proceed if the \texttt{valid} from the iCache is negative.
+
+Additionally, \texttt{sim\_main.cpp} was modified at lines 823 and 827 to fetch on aligned addresses.
+
+\section{dCache}
+Implemented in \texttt{verilog/DCACHE.v}.
+
+\end{document}
