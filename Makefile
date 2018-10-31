@@ -106,5 +106,5 @@ clean :
 clean_verilator :
 	rm -rf ${VERILATOR_REL_PATH}verilator-*/
 
-submission: verilog/ sim_main/ README.pdf writeup/writeup.pdf Makefile
+submission: verilog/ sim_main/ report.pdf writeup/writeup.pdf Makefile
 	tar -czvf ${USER}-project1.tar.gz $^
