@@ -47,7 +47,6 @@ always @(posedge CLK or negedge RESET) begin
   else if (Dcache_flush || flushing) begin
     flushing = 1;
     if (flushing_ent < 512) begin
-      if(penalty == 0) begin
         if(flushing_set == 0) begin
           Block_write = cache_table_set1[flushing_ent][255:0];
           Data_address_OUT = {cache_table_set1[flushing_ent][272:256], index, 5'b00000};
@@ -59,14 +58,6 @@ always @(posedge CLK or negedge RESET) begin
           flushing_set = 0;
           flushing_ent = flushing_ent + 1;
         end
-        penalty = 1;
-      end
-      else if (penalty == 10) begin
-        penalty = 0;
-      end
-      else begin
-        penalty = penalty + 1;
-      end
     end
     else begin
       integer i;
