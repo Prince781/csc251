@@ -156,6 +156,13 @@ module MIPS (
            .Instr_PC_IF(Instr_PC_dummy1),
            .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy1)
            );
+
+    BTB BTB(
+        .CLK(CLK),
+        .STALL(STALL),
+        .Instr_Addr_IN(Instr_PC_dummy2)
+    );
+
        
     dummy2 dummy2(
            .CLK(CLK),
