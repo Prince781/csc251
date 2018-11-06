@@ -32,14 +32,13 @@ always @(posedge CLK or negedge RESET) begin
         $display(" DUMMY [RESET] Fetching @%x", Instr_PC_Plus4);
     end else if(CLK) begin
         if(!STALL) begin  
-                Instr1_OUT <= Instr1_IF;
-                Instr_PC_OUT <= Instr_PC_IF;
-                Instr_PC_Plus4 <= Instr_PC_Plus4_IF;
-                $display("Dummy:Instr@%x=%x;Next@%x",Instr_PC_IF,Instr1_IF,Instr_PC_Plus4_IF); 
+            Instr1_OUT <= Instr1_IF;
+            Instr_PC_OUT <= Instr_PC_IF;
+            Instr_PC_Plus4 <= Instr_PC_Plus4_IF;
+            $display("Dummy:Instr@%x=%x;Next@%x",Instr_PC_IF,Instr1_IF,Instr_PC_Plus4_IF); 
         end else begin
-              $display("Dummy stalling:Instr@%x=%x;Next@%x",Instr_PC_IF,Instr1_IF,Instr_PC_Plus4_IF);
-         end 
-        
+            $display("Dummy stalling:Instr@%x=%x;Next@%x",Instr_PC_IF,Instr1_IF,Instr_PC_Plus4_IF);
+        end 
     end
 end
 endmodule
