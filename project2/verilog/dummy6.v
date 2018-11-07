@@ -31,7 +31,7 @@ always @(posedge CLK or negedge RESET) begin
         Instr1_OUT <= 0;
         Instr_PC_OUT <= 0;
         Instr_PC_Plus4 <= 0;
-        $display(" DUMMY6 [RESET] Fetching @%x", Instr_PC_Plus4);
+        $display(" DUMMY6 [RESET]");
 
     end else if(CLK) begin
         if(!STALL) begin

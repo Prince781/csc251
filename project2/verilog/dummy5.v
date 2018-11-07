@@ -27,14 +27,14 @@ module  dummy5
 );
 
 always @(posedge CLK or negedge RESET) begin
-    if(!RESET) begin
+    if(!RESET || FLUSH) begin
         Instr1_OUT <= 0;
         Instr_PC_OUT <= 0;
         Instr_PC_Plus4 <= 0;
-        $display(" DUMMY5 [RESET] Fetching @%x", Instr_PC_Plus4);
+        $display(" DUMMY5 [RESET]");
 
     end else if(CLK) begin
-        if(!STALL || FLUSH) begin
+        if(!STALL) begin
                 Instr1_OUT <= Instr1_IF;
                 Instr_PC_OUT <= Instr_PC_IF;
                 Instr_PC_Plus4 <= Instr_PC_Plus4_IF;
