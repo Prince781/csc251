@@ -272,7 +272,7 @@ module MIPS (
 	ID ID(
 		.CLK(CLK),
 		.RESET(RESET),
-    .FLUSH(FLUSH),
+                .FLUSH(FLUSH),
 		.Instr_IN(Instr1_dummy7),
 		.Instr1_PC_IN(Instr_PC_dummy7),
 		.Instr1_PC_Plus4_IN(Instr_PC_Plus4_dummy7),
@@ -334,7 +334,6 @@ module MIPS (
 	EXE EXE(
 		.CLK(CLK),
 		.RESET(RESET),
-    .FLUSH(FLUSH),
 		.Instr1_IN(Instr1_IDEXE),
 		.Instr1_PC_IN(Instr1_PC_IDEXE),
                 .Request_Alt_PC(Request_Alt_PC_IDEXE),
