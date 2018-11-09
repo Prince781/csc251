@@ -300,42 +300,42 @@ assign MemoryData1 = MemWriteData1_IN;
 	 reg [31:0] Instr1_PC_OUT;
      /* verilator lint_on UNUSED */
 
-always @(posedge CLK or negedge RESET) begin
-	if(!RESET || Flush) begin
-		Instr1_OUT <= 0;
-		Instr1_PC_OUT <= 0;
-		WriteRegister1_OUT <= 0;
-		RegWrite1_OUT <= 0;
-		WriteData1_OUT <= 0;
-                Request_Alt_PC2 <= 1'b0;
-                Alt_PC2 <= 32'b0;
-                Request_Alt_PC1 <=1'b0;
-                Alt_PC1 <=32'b0;
-    Flush = 0;
-	end else if(CLK) begin
-			Instr1_OUT <= Instr1_IN;
-			Instr1_PC_OUT <= Instr1_PC_IN;
-			WriteRegister1_OUT <= WriteRegister1_IN;
-			RegWrite1_OUT <= RegWrite1_IN;
-			WriteData1_OUT <= WriteData1;
-                        $display("MEM: Request_Alt_PC=%X",Request_Alt_PC);
-      if(Request_Alt_PC_Predicted != Request_Alt_PC) begin
-        if(comment1) begin
-          $display("MEM:Branch misprediction detected");
-        end
-        Request_Alt_PC1 <= Request_Alt_PC;
-        Alt_PC1 <= Alt_PC;
-        Flush = 1;
-      end
-      else begin
-        Request_Alt_PC1 <= 0;
-        Flush = 0;
-      end
-			if(comment1) begin
-				$display("MEM:Instr1_OUT=%x,Instr1_PC_OUT=%x,WriteData1=%x; Write?%d to %d",Instr1_IN,Instr1_PC_IN,WriteData1, RegWrite1_IN, WriteRegister1_IN);
-				$display("MEM:data_address_2DM=%x; data_write_2DM(%d)=%x(%d); data_read_fDM(%d)=%x",data_address_2DM,MemWrite_2DM,data_write_2DM,data_write_size_2DM,MemRead_2DM,data_read_fDM);
-			end
-	end
-end
+     always @(posedge CLK or negedge RESET) begin
+         if(!RESET) begin
+             Instr1_OUT <= 0;
+             Instr1_PC_OUT <= 0;
+             WriteRegister1_OUT <= 0;
+             RegWrite1_OUT <= 0;
+             WriteData1_OUT <= 0;
+             Request_Alt_PC2 <= 1'b0;
+             Alt_PC2 <= 32'b0;
+             Request_Alt_PC1 <=1'b0;
+             Alt_PC1 <=32'b0;
+             Flush = 0;
+         end else if(CLK) begin
+             Instr1_OUT <= Instr1_IN;
+             Instr1_PC_OUT <= Instr1_PC_IN;
+             WriteRegister1_OUT <= WriteRegister1_IN;
+             RegWrite1_OUT <= RegWrite1_IN;
+             WriteData1_OUT <= WriteData1;
+             $display("MEM: Request_Alt_PC=%X",Request_Alt_PC);
+             if(Request_Alt_PC_Predicted != Request_Alt_PC) begin
+                 if(comment1) begin
+                     $display("MEM:Branch misprediction detected");
+                 end
+                 Request_Alt_PC1 <= Request_Alt_PC;
+                 Alt_PC1 <= Alt_PC;
+                 Flush = 1;
+             end
+             else begin
+                 Request_Alt_PC1 <= 0;
+                 Flush = 0;
+             end
+             if(comment1) begin
+                 $display("MEM:Instr1_OUT=%x,Instr1_PC_OUT=%x,WriteData1=%x; Write?%d to %d",Instr1_IN,Instr1_PC_IN,WriteData1, RegWrite1_IN, WriteRegister1_IN);
+                 $display("MEM:data_address_2DM=%x; data_write_2DM(%d)=%x(%d); data_read_fDM(%d)=%x",data_address_2DM,MemWrite_2DM,data_write_2DM,data_write_size_2DM,MemRead_2DM,data_read_fDM);
+             end
+         end
+     end
 
 endmodule
