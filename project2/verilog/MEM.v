@@ -57,7 +57,7 @@ module MEM(
     input [31:0] data_read_fDM,
 	 output MemRead_2DM,
 	 output MemWrite_2DM,
-   output Flush
+   output reg Flush
 
 `ifdef HAS_FORWARDING
     ,
@@ -311,7 +311,7 @@ assign MemoryData1 = MemWriteData1_IN;
              Alt_PC2 <= 32'b0;
              Request_Alt_PC1 <=1'b0;
              Alt_PC1 <=32'b0;
-             Flush = 0;
+             Flush <= 0;
          end else if(CLK) begin
              Instr1_OUT <= Instr1_IN;
              Instr1_PC_OUT <= Instr1_PC_IN;
@@ -325,11 +325,11 @@ assign MemoryData1 = MemWriteData1_IN;
                  end
                  Request_Alt_PC1 <= Request_Alt_PC;
                  Alt_PC1 <= Alt_PC;
-                 Flush = 1;
+                 Flush <= 1;
              end
              else begin
                  Request_Alt_PC1 <= 0;
-                 Flush = 0;
+                 Flush <= 0;
              end
              if(comment1) begin
                  $display("MEM:Instr1_OUT=%x,Instr1_PC_OUT=%x,WriteData1=%x; Write?%d to %d",Instr1_IN,Instr1_PC_IN,WriteData1, RegWrite1_IN, WriteRegister1_IN);

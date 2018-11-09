@@ -21,6 +21,7 @@
 module EXE(
     input CLK,
     input RESET,
+    input FLUSH,
 	 //Current instruction [debug]
     input [31:0] Instr1_IN,
     //Current instruction's PC [debug]
@@ -174,7 +175,7 @@ assign MemWriteData1 = MemWriteData1_IN;
 `endif
 
 always @(posedge CLK or negedge RESET) begin
-	if(!RESET) begin
+	if(!RESET || FLUSH) begin
 		Instr1_OUT <= 0;
 		Instr1_PC_OUT <= 0;
 		ALU_result1_OUT <= 0;
