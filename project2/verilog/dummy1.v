@@ -17,13 +17,15 @@ module  dummy1
     output reg [31:0] Instr_PC_OUT,
     //This should contain the address of the instruction after the fetched instruction (used by ID)
     output reg [31:0] Instr_PC_Plus4,
+    output reg Branch_prediction_OUT,
     //Will be set to true if we need to just freeze the fetch stage.
     input STALL,
     //Address from which we want to fetch an instruction
     //Instruction received from dummy
     input [31:0]   Instr1_IF,
     input [31:0]   Instr_PC_IF,
-    input [31:0]   Instr_PC_Plus4_IF
+    input [31:0]   Instr_PC_Plus4_IF,
+    input Branch_prediction_IN
 );
 
 always @(posedge CLK or negedge RESET) begin
@@ -31,12 +33,14 @@ always @(posedge CLK or negedge RESET) begin
         Instr1_OUT <= 0;
         Instr_PC_OUT <= 0;
         Instr_PC_Plus4 <= 0;
+        Branch_prediction_OUT <= 0;
         $display(" DUMMY1 [RESET]");
     end else if(CLK) begin
         if(!STALL) begin
                 Instr1_OUT <= Instr1_IF;
                 Instr_PC_OUT <= Instr_PC_IF;
                 Instr_PC_Plus4 <= Instr_PC_Plus4_IF;
+                Branch_prediction_OUT <= Branch_prediction_IN;
                 $display("Dummy1:Instr@%x=%x;Next@%x",Instr_PC_IF,Instr1_IF,Instr_PC_Plus4_IF);
         end else begin
            $display("Dummy1 stalling:Instr@%x=%x;Next@%x",Instr_PC_IF,Instr1_IF,Instr_PC_Plus4_IF);

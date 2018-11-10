@@ -94,27 +94,46 @@ module MIPS (
     assign unused_i3 = Instr2_fIC;
 `endif
 
+    wire Branch_prediction_BP_dummy;
+
     wire [31:0] Instr1_dummy1;
     wire [31:0] Instr_PC_dummy1;
     wire [31:0] Instr_PC_Plus4_dummy1;
+    wire BP_taken_dummy1;
+
     wire [31:0] Instr1_dummy2;
     wire [31:0] Instr_PC_dummy2;
     wire [31:0] Instr_PC_Plus4_dummy2;
+    wire BP_taken_dummy2;
+
     wire [31:0] Instr1_dummy3;
     wire [31:0] Instr_PC_dummy3;
     wire [31:0] Instr_PC_Plus4_dummy3;
+    wire BP_taken_dummy3;
+
     wire [31:0] Instr1_dummy4;
     wire [31:0] Instr_PC_dummy4;
     wire [31:0] Instr_PC_Plus4_dummy4;
+    wire BP_taken_dummy4;
+
     wire [31:0] Instr1_dummy5;
     wire [31:0] Instr_PC_dummy5;
     wire [31:0] Instr_PC_Plus4_dummy5;
+    wire BP_taken_dummy5;
+
     wire [31:0] Instr1_dummy6;
     wire [31:0] Instr_PC_dummy6;
     wire [31:0] Instr_PC_Plus4_dummy6;
+    wire BP_taken_dummy6;
+
     wire [31:0] Instr1_dummy7;
     wire [31:0] Instr_PC_dummy7;
     wire [31:0] Instr_PC_Plus4_dummy7;
+    wire BP_taken_dummy7;
+
+    wire BP_taken_IDEXE;
+    wire BP_taken_EXEMEM;
+
     wire [31:0] Alt_PC_MEMIF;
     wire Request_Alt_PC_MEMIF;
 
@@ -130,6 +149,7 @@ module MIPS (
     IF IF(
         .CLK(CLK),
         .RESET(RESET),
+        .FLUSH(FLUSH),
         .Instr1_OUT(Instr1_IFID),
         .Instr_PC_OUT(Instr_PC_IFID),
         .Instr_PC_Plus4(Instr_PC_Plus4_IFID),
@@ -145,9 +165,9 @@ module MIPS (
       .RESET(RESET),
       .Instr_input(Instr1_IFID),
       .Instr_addr_input(Instr_PC_IFID),
-      .Branch_resolved(Branch_resolved_BPMEM),
-      .Branch_resolved_addr(Branch_resolved_BPMEM),
-      .Taken(Branch_prediction_BPMEM)
+      .Branch_resolved(Branch_resolved_MEMBP),
+      .Branch_resolved_addr(Branch_resolved_MEMBP),
+      .Taken(Branch_prediction_BP_dummy)
       );
 
    dummy dummy(
@@ -157,10 +177,12 @@ module MIPS (
            .Instr1_OUT(Instr1_dummy1),
            .Instr_PC_OUT(Instr_PC_dummy1),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy1),
+           .Branch_prediction_OUT(BP_taken_dummy1),
            .STALL(STALL_IDIF),
            .Instr1_IF(Instr1_IFID),
            .Instr_PC_IF(Instr_PC_IFID),
-           .Instr_PC_Plus4_IF(Instr_PC_Plus4_IFID)
+           .Instr_PC_Plus4_IF(Instr_PC_Plus4_IFID),
+           .Branch_prediction_IN(Branch_prediction_BP_dummy)
           );
 
    dummy1 dummy1(
@@ -170,10 +192,12 @@ module MIPS (
            .Instr1_OUT(Instr1_dummy2),
            .Instr_PC_OUT(Instr_PC_dummy2),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy2),
+           .Branch_prediction_OUT(BP_taken_dummy2),
            .STALL(STALL_IDIF),
            .Instr1_IF(Instr1_dummy1),
            .Instr_PC_IF(Instr_PC_dummy1),
-           .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy1)
+           .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy1),
+           .Branch_prediction_IN(BP_taken_dummy1)
            );
 
     dummy2 dummy2(
@@ -183,10 +207,12 @@ module MIPS (
            .Instr1_OUT(Instr1_dummy3),
            .Instr_PC_OUT(Instr_PC_dummy3),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy3),
+           .Branch_prediction_OUT(BP_taken_dummy3),
            .STALL(STALL_IDIF),
            .Instr1_IF(Instr1_dummy2),
            .Instr_PC_IF(Instr_PC_dummy2),
-           .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy2)
+           .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy2),
+           .Branch_prediction_IN(BP_taken_dummy2)
            );
     dummy3 dummy3(
            .CLK(CLK),
@@ -195,10 +221,12 @@ module MIPS (
            .Instr1_OUT(Instr1_dummy4),
            .Instr_PC_OUT(Instr_PC_dummy4),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy4),
+           .Branch_prediction_OUT(BP_taken_dummy4),
            .STALL(STALL_IDIF),
            .Instr1_IF(Instr1_dummy3),
            .Instr_PC_IF(Instr_PC_dummy3),
-           .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy3)
+           .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy3),
+           .Branch_prediction_IN(BP_taken_dummy3)
            );
     dummy4 dummy4(
            .CLK(CLK),
@@ -207,10 +235,12 @@ module MIPS (
            .Instr1_OUT(Instr1_dummy5),
            .Instr_PC_OUT(Instr_PC_dummy5),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy5),
+           .Branch_prediction_OUT(BP_taken_dummy5),
            .STALL(STALL_IDIF),
            .Instr1_IF(Instr1_dummy4),
            .Instr_PC_IF(Instr_PC_dummy4),
-           .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy4)
+           .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy4),
+           .Branch_prediction_IN(BP_taken_dummy4)
            );
     dummy5 dummy5(
            .CLK(CLK),
@@ -219,10 +249,12 @@ module MIPS (
            .Instr1_OUT(Instr1_dummy6),
            .Instr_PC_OUT(Instr_PC_dummy6),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy6),
+           .Branch_prediction_OUT(BP_taken_dummy6),
            .STALL(STALL_IDIF),
            .Instr1_IF(Instr1_dummy5),
            .Instr_PC_IF(Instr_PC_dummy5),
-           .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy5)
+           .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy5),
+           .Branch_prediction_IN(BP_taken_dummy5)
            );
 
     dummy6 dummy6(
@@ -232,10 +264,12 @@ module MIPS (
            .Instr1_OUT(Instr1_dummy7),
            .Instr_PC_OUT(Instr_PC_dummy7),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy7),
+           .Branch_prediction_OUT(BP_taken_dummy7),
            .STALL(STALL_IDIF),
            .Instr1_IF(Instr1_dummy6),
            .Instr_PC_IF(Instr_PC_dummy6),
-           .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy6)
+           .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy6),
+           .Branch_prediction_IN(BP_taken_dummy6)
            );
 
     wire [4:0]  WriteRegister1_MEMWB;
@@ -276,11 +310,13 @@ module MIPS (
 		.Instr_IN(Instr1_dummy7),
 		.Instr1_PC_IN(Instr_PC_dummy7),
 		.Instr1_PC_Plus4_IN(Instr_PC_Plus4_dummy7),
+                .Branch_prediction_IN(BP_taken_dummy7),
 		.WriteRegister1_IN(WriteRegister1_MEMWB),
 		.WriteData1_IN(WriteData1_MEMWB),
 		.RegWrite1_IN(RegWrite1_MEMWB),
 		.Alt_PC(Alt_PC_IDEXE),
 		.Request_Alt_PC(Request_Alt_PC_IDEXE),
+                .Branch_prediction_OUT(BP_taken_IDEXE),
 		.Instr1_OUT(Instr1_IDEXE),
         .Instr1_PC_OUT(Instr1_PC_IDEXE),
 		.OperandA1_OUT(OperandA1_IDEXE),
@@ -339,6 +375,7 @@ module MIPS (
 		.Instr1_PC_IN(Instr1_PC_IDEXE),
                 .Request_Alt_PC(Request_Alt_PC_IDEXE),
                 .Alt_PC(Alt_PC_IDEXE),
+                .Branch_prediction_IN(BP_taken_IDEXE),
 `ifdef HAS_FORWARDING
 		.RegisterA1_IN(RegisterA1_IDEXE),
 `endif
@@ -364,7 +401,8 @@ module MIPS (
 		.MemRead1_OUT(MemRead1_EXEMEM),
 		.MemWrite1_OUT(MemWrite1_EXEMEM),
                 .Alt_PC1(Alt_PC_EXEMEM),
-                .Request_Alt_PC1(Request_Alt_PC_EXEMEM)
+                .Request_Alt_PC1(Request_Alt_PC_EXEMEM),
+                .Branch_prediction_OUT(BP_taken_EXEMEM)
 `ifdef HAS_FORWARDING
 		,
 		.BypassReg1_MEMEXE(WriteRegister1_MEMWB),
@@ -419,7 +457,7 @@ module MIPS (
         .Instr1_PC_IN(Instr1_PC_EXEMEM),
         .Request_Alt_PC(Request_Alt_PC_EXEMEM),
         .Alt_PC(Alt_PC_EXEMEM),
-        .Request_Alt_PC_Predicted(Branch_prediction_BPMEM),
+        .Request_Alt_PC_Predicted(BP_taken_EXEMEM),
         .ALU_result1_IN(ALU_result1_EXEMEM),
         .WriteRegister1_IN(WriteRegister1_EXEMEM),
         .MemWriteData1_IN(MemWriteData1_EXEMEM),

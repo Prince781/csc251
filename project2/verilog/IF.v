@@ -10,7 +10,7 @@ module  IF
 (
     input CLK,
     input RESET,
-    
+    input FLUSH,
     //This should contain the fetched instruction
     output reg [31:0] Instr1_OUT,
     //This should contain the address of the fetched instruction [DEBUG purposes]
@@ -62,6 +62,10 @@ always @(posedge CLK or negedge RESET) begin
                 $display("FETCH:ReqAlt[%d]=%x",Request_Alt_PC,Alt_PC);
 `endif
         end else begin
+            if (FLUSH) begin
+                $display("FETCH [FLUSH]: Alt_PC = %x", Alt_PC);
+                Instr_PC_Plus4 <= Alt_PC;
+            end
             $display("FETCH: Stalling; next request will be %x",Instr_address_2IM);
         end
     end
