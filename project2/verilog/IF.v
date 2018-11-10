@@ -65,6 +65,7 @@ always @(posedge CLK or negedge RESET) begin
             if (FLUSH) begin
                 $display("FETCH [FLUSH]: Alt_PC = %x", Alt_PC);
                 Instr_PC_Plus4 <= Alt_PC;
+                Instr1_OUT <= 0;
             end
             $display("FETCH: Stalling; next request will be %x",Instr_address_2IM);
         end
