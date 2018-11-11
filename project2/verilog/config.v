@@ -18,6 +18,9 @@
 `define USE_ICACHE
 `define USE_DCACHE
 
+// mutally exclusive
+`define BP_NOTTAKEN // use always-not-taken branch predictor
+
 //Added before project 4 starts
 //`define OUT_OF_ORDER
 

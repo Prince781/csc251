@@ -160,15 +160,15 @@ module MIPS (
         .Instr1_fIM(Instr1_fIC)
     );
 
+`ifdef BP_NOTTAKEN
     AlwaysNotTaken AlwaysNotTaken(
       .CLK(CLK),
       .RESET(RESET),
       .Instr_input(Instr1_IFID),
       .Instr_addr_input(Instr_PC_IFID),
-      .Branch_resolved(Branch_resolved_MEMBP),
-      .Branch_resolved_addr(Branch_resolved_MEMBP),
       .Taken(Branch_prediction_BP_dummy)
       );
+`endif
 
    dummy dummy(
            .CLK(CLK),

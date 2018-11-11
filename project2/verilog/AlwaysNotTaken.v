@@ -7,8 +7,6 @@ module AlwaysNotTaken(
     input RESET,
     input      [31: 0] Instr_input,	 // instruction
     input      [31: 0] Instr_addr_input, // Inst Address
-    input      Branch_resolved,
-    input      Branch_resolved_addr,
     output Taken // main output of module - whether we jump/branch or not
     // 1 if branch
     // 0 if not
