@@ -12,7 +12,7 @@ module LocalPredictor(
     );
 
     reg [9:0] bht [1023:0]; // Branch History Table
-    reg [1:0] pht [1023:0]; // 10 bit Global History Register needs 2^10 = 1024 entries
+    reg [1:0] pht [1023:0]; // 10 bit Branch History Register needs 2^10 = 1024 entries
 
     always @(Instr_input) begin // Do prediction
         $display("Hybrid: Local Predictor: %x", Instr_addr_input);
