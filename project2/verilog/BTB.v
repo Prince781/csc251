@@ -61,21 +61,21 @@ always @(posedge CLK) begin
 
     if (Is_Branch_IN) begin
         if (valid1 && tag_in == tag1) begin
-            Addr_OUT <= target1;
-            Valid_OUT <= 1'b1;
-            cache[idx] <= {1'b1,valid2,tag2,target2,1'b0,valid1,tag1,target1};
+            Addr_OUT = target1;
+            Valid_OUT = 1'b1;
+            cache[idx] = {1'b1,valid2,tag2,target2,1'b0,valid1,tag1,target1};
             $display("BTB: hit in block 1");
         end else if (valid2 && tag_in == tag2) begin
-            Addr_OUT <= target2;
-            Valid_OUT <= 1'b1;
-            cache[idx] <= {1'b0,valid2,tag2,target2,1'b1,valid1,tag1,target1};
+            Addr_OUT = target2;
+            Valid_OUT = 1'b1;
+            cache[idx] = {1'b0,valid2,tag2,target2,1'b1,valid1,tag1,target1};
             $display("BTB: hit in block 2");
         end else begin  /* cache miss */
             if (valid1 | valid2) begin
                 $display("BTB: PC tag: %x, tag1: %x, tag2: %x", tag_in, tag1, tag2);
             end
-            Addr_OUT <= 0;
-            Valid_OUT <= 1'b0;
+            Addr_OUT = 0;
+            Valid_OUT = 1'b0;
             $display("BTB: cache miss");
         end
 
@@ -85,8 +85,8 @@ always @(posedge CLK) begin
             $display("BTB: no entry for %x (PC)", Instr_Addr_IN);
         end
     end else begin  /* not a branch */
-        Addr_OUT <= 0;
-        Valid_OUT <= 1'b0;
+        Addr_OUT = 0;
+        Valid_OUT = 1'b0;
         $display("BTB: current instr not a branch");
     end
 end
