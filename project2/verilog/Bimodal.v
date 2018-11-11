@@ -26,6 +26,7 @@ wire jump2;
 wire is_branch;
 wire pht_taken;
 wire [31:0] btb_addr;
+wire btb_valid;
 
 Decoder #(.TAG("BTB-BranchInstr")) IsBranch1(
     .Instr(Branch_instr),
@@ -62,7 +63,8 @@ BTB BTB(
     .Branch_resolved_addr_IN(last_branch_resolved_addr),
     .Instr_Addr_IN(Instr_addr_input),
     .Is_Branch_IN(is_branch),
-    .Addr_OUT(btb_addr)
+    .Addr_OUT(btb_addr),
+    .Valid_OUT(btb_valid)
 );
 
 PHT PHT(
@@ -80,9 +82,9 @@ always @(posedge CLK or negedge RESET) begin
         Taken_addr <= 0;
         $display("Bimodal [RESET]");
     end else if (CLK) begin
-        Taken <= pht_taken;
+        Taken <= pht_taken & btb_valid;
         Taken_addr <= btb_addr;
-        $display("Bimodal: instr@%x=%x Taken? %x => %x", Instr_addr_input, Instr_input, pht_taken, btb_addr);
+        $display("Bimodal: instr@%x=%x Taken? %x => %x", Instr_addr_input, Instr_input, pht_taken & btb_valid, btb_addr);
     end
     if (is_branch_last) begin
         $display("Bimodal: last branch@%x=%x actually %s", Branch_addr, Branch_instr, Branch_resolved ? "taken" : "not taken");

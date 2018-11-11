@@ -9,7 +9,8 @@ module BTB(
     input [31:0] Branch_resolved_addr_IN,   /* where the last branch resolved to */
     input [31:0] Instr_Addr_IN,             /* current PC */
     input Is_Branch_IN,                     /* whether the current instruction is a branch */
-    output reg [31:0] Addr_OUT              /* new PC */
+    output reg [31:0] Addr_OUT,             /* new PC */
+    output reg Valid_OUT                    /* whether the entry is valid */
 );
 
 /* (32 + 1 valid bit + 20-bit tag + 1 LRU bit) * 2-way = 108 bits */
@@ -61,10 +62,12 @@ always @(posedge CLK) begin
     if (Is_Branch_IN) begin
         if (valid1 && tag_in == tag1) begin
             Addr_OUT <= target1;
+            Valid_OUT <= 1'b1;
             cache[idx] <= {1'b1,valid2,tag2,target2,1'b0,valid1,tag1,target1};
             $display("BTB: hit in block 1");
         end else if (valid2 && tag_in == tag2) begin
             Addr_OUT <= target2;
+            Valid_OUT <= 1'b1;
             cache[idx] <= {1'b0,valid2,tag2,target2,1'b1,valid1,tag1,target1};
             $display("BTB: hit in block 2");
         end else begin  /* cache miss */
@@ -72,6 +75,7 @@ always @(posedge CLK) begin
                 $display("BTB: PC tag: %x, tag1: %x, tag2: %x", tag_in, tag1, tag2);
             end
             Addr_OUT <= 0;
+            Valid_OUT <= 1'b0;
             $display("BTB: cache miss");
         end
 
@@ -82,6 +86,7 @@ always @(posedge CLK) begin
         end
     end else begin  /* not a branch */
         Addr_OUT <= 0;
+        Valid_OUT <= 1'b0;
         $display("BTB: current instr not a branch");
     end
 end
