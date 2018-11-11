@@ -406,7 +406,8 @@ RegFile RegFile (
 /* verilator lint_off PINCONNECTEMPTY */
     .MultRegAccess(),   //Needed for out-of-order
 /* verilator lint_on PINCONNECTEMPTY */
-     .comment1(1'b1)
+     .comment1(1'b1),
+     .comment(1'b1)
     );
 
 endmodule

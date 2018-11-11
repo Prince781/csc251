@@ -27,10 +27,11 @@ module Decoder
     //Instruction to decode
     input [31:0] Instr,
     //PC of instruction (for debug output)
-	 input [31:0] Instr_PC,
-	 //Enable debug output
-	 input comment1,
-	 //This is a ...AndLink instruction
+    input [31:0] Instr_PC,
+    //Enable debug output
+    input comment1,
+    input comment,
+    //This is a ...AndLink instruction
     output reg Link,
     //This instruction uses the RegDest register (Instr[15:11])
     output reg RegDest,
@@ -187,7 +188,9 @@ always begin
         6'b010101: begin {Link,RegDest,Jump,Branch,MemRead,MemWrite,ALUSrc,RegWrite,JumpRegister,SignOrZero,Syscall,ALUControl,MultRegAccess} = 19'b0001000001011110000; if (comment1)$display("[%s]bnel",TAG); end//BNEL
         default: begin {Link,RegDest,Jump,Branch,MemRead,MemWrite,ALUSrc,RegWrite,JumpRegister,SignOrZero,Syscall,ALUControl,MultRegAccess} = 19'd0; $display("Not an Instruction!"); end//default
     endcase
-    $display("Decode[%s]: Instr=%x Instr_PC=%x Link1=%d, RegDest=%d, Jump=%d, Branch=%d, MemRead=%d, MemWrite=%d, ALUSrc=%d, RegWrite=%d, JumpRegister=%d,SignOrZero=%d,Syscall=%d,ALUControl=%x",TAG, Instr, Instr_PC, Link, RegDest, Jump, Branch, MemRead, MemWrite, ALUSrc, RegWrite, JumpRegister, SignOrZero, Syscall, ALUControl);
+    if (comment) begin
+        $display("Decode[%s]: Instr=%x Instr_PC=%x Link1=%d, RegDest=%d, Jump=%d, Branch=%d, MemRead=%d, MemWrite=%d, ALUSrc=%d, RegWrite=%d, JumpRegister=%d,SignOrZero=%d,Syscall=%d,ALUControl=%x",TAG, Instr, Instr_PC, Link, RegDest, Jump, Branch, MemRead, MemWrite, ALUSrc, RegWrite, JumpRegister, SignOrZero, Syscall, ALUControl);
+    end
 end
 
 

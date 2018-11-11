@@ -25,10 +25,14 @@ module MEM(
     input [31:0] Instr1_IN,
     //PC of executing instruction [debug only]
     input [31:0] Instr1_PC_IN,
+
     input Request_Alt_PC,
     input[31:0] Alt_PC,
-
     input Request_Alt_PC_Predicted,
+
+    input Request_Alt_PC_BP,
+    input [31:0] Alt_PC_BP,
+
     //Output of ALU (contains address to access, or data enroute to writeback)
     input [31:0] ALU_result1_IN,
     //What register will get our ultimate outputs
@@ -53,43 +57,42 @@ module MEM(
     output [31:0] data_address_2DM,
     output  [31:0] Alt_PC1,
     output  Request_Alt_PC1,
-	 output reg [1:0] data_write_size_2DM,
+    output reg [1:0] data_write_size_2DM,
     input [31:0] data_read_fDM,
-	 output MemRead_2DM,
-	 output MemWrite_2DM,
-   output reg Flush
+    output MemRead_2DM,
+    output MemWrite_2DM,
+    output reg Flush,
 
 `ifdef HAS_FORWARDING
-    ,
-    output [31:0] WriteData1_async
+    output [31:0] WriteData1_async,
 `endif
+    output reg [31:0] Instr_OUT,
+    output reg [31:0] Instr_PC_OUT
+);
 
-    );
+    reg [31:0]  Alt_PC2;
+    reg Request_Alt_PC2;
+    //Variables for Memory Module Inputs/Outputs:
+    //ALU_result == Memory Address to access
+    //MemRead (obvious)
+    //MemWrite (obvious)
+    //ALU_control (obvious)
+    wire [31:0] MemoryData1;	//Used for LWL, LWR (existing content in register) and for writing (data to write)
+    wire [31:0] MemoryData;
+    //wire [31:0] MemoryReadData;	//Data read in from memory (and merged appropriate if LWL, LWR)
+    reg [31:0]	 data_read_aligned;
 
+    //Word-aligned address for reads
+    wire [31:0] MemReadAddress;
+    //Not always word-aligned address for writes (SWR has issues with this)
+    reg [31:0] MemWriteAddress;
 
-          reg [31:0]  Alt_PC2;
-          reg Request_Alt_PC2;
-	 //Variables for Memory Module Inputs/Outputs:
-	 //ALU_result == Memory Address to access
-	 //MemRead (obvious)
-	 //MemWrite (obvious)
-	 //ALU_control (obvious)
-	 wire [31:0] MemoryData1;	//Used for LWL, LWR (existing content in register) and for writing (data to write)
-	 wire [31:0] MemoryData;
-	 //wire [31:0] MemoryReadData;	//Data read in from memory (and merged appropriate if LWL, LWR)
-	 reg [31:0]	 data_read_aligned;
+    wire MemWrite;
+    wire MemRead;
 
-	 //Word-aligned address for reads
-     wire [31:0] MemReadAddress;
-     //Not always word-aligned address for writes (SWR has issues with this)
-     reg [31:0] MemWriteAddress;
+    wire [31:0] ALU_result;
 
-	 wire MemWrite;
-	 wire MemRead;
-
-	 wire [31:0] ALU_result;
-
-	 wire [5:0] ALU_Control;
+    wire [5:0] ALU_Control;
 
     assign MemWrite = MemWrite1_IN;
     assign MemRead = MemRead1_IN;
@@ -97,26 +100,18 @@ module MEM(
     assign ALU_Control = ALU_Control1_IN;
     assign MemoryData = MemoryData1;
 
-	 assign MemReadAddress = {ALU_result[31:2],2'b00};
+    assign MemReadAddress = {ALU_result[31:2],2'b00};
 
-	 assign data_address_2DM = MemWrite?MemWriteAddress:MemReadAddress;	//Reads are always aligned; writes may be unaligned
+    assign data_address_2DM = MemWrite?MemWriteAddress:MemReadAddress;	//Reads are always aligned; writes may be unaligned
 
-	 assign MemRead_2DM = MemRead;
+    assign MemRead_2DM = MemRead;
     assign MemWrite_2DM = MemWrite;
 
 
-     reg [31:0]WriteData1;
+    reg [31:0]WriteData1;
 
-	 wire comment1;
-	 assign comment1 = 1;
-
-
-
-
-
-
-
-
+    wire comment1;
+    assign comment1 = 1;
 
 always @(data_read_fDM) begin
 	//$display("MEM Received:data_read_fDM=%x",data_read_fDM);
@@ -311,6 +306,8 @@ assign MemoryData1 = MemWriteData1_IN;
              Alt_PC2 <= 32'b0;
              Request_Alt_PC1 <=1'b0;
              Alt_PC1 <=32'b0;
+             Instr_OUT <= 32'b0;
+             Instr_PC_OUT <= 32'b0;
              Flush <= 0;
          end else if(CLK) begin
              Instr1_OUT <= Instr1_IN;
@@ -318,6 +315,8 @@ assign MemoryData1 = MemWriteData1_IN;
              WriteRegister1_OUT <= WriteRegister1_IN;
              RegWrite1_OUT <= RegWrite1_IN;
              WriteData1_OUT <= WriteData1;
+             Instr_OUT <= Instr1_IN;
+             Instr_PC_OUT <= Instr1_PC_IN;
              $display("MEM: Request_Alt_PC=%X",Request_Alt_PC);
              if(Request_Alt_PC_Predicted != Request_Alt_PC) begin
                  if(comment1) begin
@@ -328,7 +327,14 @@ assign MemoryData1 = MemWriteData1_IN;
                  Flush <= 1;
              end
              else begin
-                 Request_Alt_PC1 <= 0;
+                 /* our instruction from EXE is not a branch; now we see 
+                  * if BP predicted a branch */
+                 if (Request_Alt_PC_BP) begin
+                     Request_Alt_PC1 <= Request_Alt_PC_BP;
+                     Alt_PC1 <= Alt_PC_BP;
+                 end else begin
+                     Request_Alt_PC1 <= 0;
+                 end
                  Flush <= 0;
              end
              if(comment1) begin

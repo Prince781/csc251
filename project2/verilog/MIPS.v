@@ -139,12 +139,19 @@ module MIPS (
 
     // Branch result for BP
     wire        Branch_resolved_MEMBP;
-    wire [31:0] branch_resolved_addr_MEMBP;
+    wire [31:0] Branch_resolved_addr_MEMBP;
+    wire [31:0] Branch_addr_MEMBP;
+    wire [31:0] Instr_MEMBP;
     // Branch prediction for MEM
     wire        Branch_prediction_BPMEM;
+    wire [31:0] Branch_prediction_addr_BPMEM;
+
+
     always@(*)begin
        $display("MIPS:Request_Alt_PC_MEMIF=%X",Request_Alt_PC_MEMIF);
        $display("MIPS:Alt_PC_MEMIF=%X",Alt_PC_MEMIF);
+       $display("MIPS:Branch_resolved_MEMBP=%X",Branch_resolved_MEMBP);
+       $display("MIPS:Branch_resolved_addr_MEMBP=%X",Branch_resolved_addr_MEMBP);
     end
     IF IF(
         .CLK(CLK),
@@ -168,6 +175,21 @@ module MIPS (
       .Instr_addr_input(Instr_PC_IFID),
       .Taken(Branch_prediction_BP_dummy)
       );
+`elsif BP_BIMODAL
+    Bimodal Bimodal(
+        .CLK(CLK),
+        .RESET(RESET),
+        .FLUSH(FLUSH),
+        .Instr_input(Instr1_IFID),
+        .Instr_addr_input(Instr_PC_IFID),
+        .Branch_instr(Instr_MEMBP),
+        .Branch_resolved(Branch_resolved_MEMBP),
+        .Branch_resolved_addr(Branch_resolved_addr_MEMBP),
+        .Branch_addr(Branch_addr_MEMBP),
+        .Taken(Branch_prediction_BP_dummy),
+        .Taken_addr(Branch_prediction_addr_BPMEM)
+    );
+    assign Branch_prediction_BPMEM = Branch_prediction_BP_dummy;
 `endif
 
    dummy dummy(
@@ -450,6 +472,12 @@ module MIPS (
 
     wire FLUSH;
 
+`ifdef BP_BIMODAL
+    assign Branch_resolved_MEMBP = Request_Alt_PC_MEMIF;
+    assign Branch_resolved_addr_MEMBP = Alt_PC_MEMIF;
+`endif
+
+
     MEM MEM(
         .CLK(CLK),
         .RESET(RESET),
@@ -458,6 +486,8 @@ module MIPS (
         .Request_Alt_PC(Request_Alt_PC_EXEMEM),
         .Alt_PC(Alt_PC_EXEMEM),
         .Request_Alt_PC_Predicted(BP_taken_EXEMEM),
+        .Request_Alt_PC_BP(Branch_prediction_BPMEM),
+        .Alt_PC_BP(Branch_prediction_addr_BPMEM),
         .ALU_result1_IN(ALU_result1_EXEMEM),
         .WriteRegister1_IN(WriteRegister1_EXEMEM),
         .MemWriteData1_IN(MemWriteData1_EXEMEM),
@@ -475,12 +505,13 @@ module MIPS (
         .MemRead_2DM(read_2DC),
         .Request_Alt_PC1(Request_Alt_PC_MEMIF),
         .Alt_PC1(Alt_PC_MEMIF),
-        .MemWrite_2DM(write_2DC)
+        .MemWrite_2DM(write_2DC),
 `ifdef HAS_FORWARDING
-        ,
         .WriteData1_async(BypassData1_MEMID),
-        .Flush(FLUSH)
+        .Flush(FLUSH),
 `endif
+        .Instr_OUT(Instr_MEMBP),
+        .Instr_PC_OUT(Branch_addr_MEMBP)
     );
 
 `ifdef HAS_FORWARDING
