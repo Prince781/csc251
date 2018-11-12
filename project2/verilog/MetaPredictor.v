@@ -35,19 +35,21 @@ module MetaPredictor(
 
     always @(Branch_resolved) begin // Update predictor
         $display("Hybrid: Meta Predictor: %x", Instr_addr_input);
-        if (Branch_resolved) begin
-            case(bht[Branch_resolved_addr[11:2]])
-                2'b11:fsm[Branch_resolved_addr[11:2]] = fsm[Branch_resolved_addr[11:2]];
-                default: fsm[Branch_resolved_addr[11:2]]++;
-            endcase
+        if (Branch_resolved_addr != 0) begin
+            if (Branch_resolved) begin
+                case(bht[Branch_resolved_addr[11:2]])
+                    2'b11:fsm[Branch_resolved_addr[11:2]] = fsm[Branch_resolved_addr[11:2]];
+                    default: fsm[Branch_resolved_addr[11:2]]++;
+                endcase
 
-        end
-        else
-            case(fsm[Branch_resolved_addr[11:2]])
-                2'b00:fsm[Branch_resolved_addr[11:2]] = fsm[Branch_resolved_addr[11:2]];
-                default: fsm[Branch_resolved_addr[11:2]]--;
-            endcase
+            end
+            else
+                case(fsm[Branch_resolved_addr[11:2]])
+                    2'b00:fsm[Branch_resolved_addr[11:2]] = fsm[Branch_resolved_addr[11:2]];
+                    default: fsm[Branch_resolved_addr[11:2]]--;
+                endcase
 
+            end
         end
     end
 endmodule

@@ -36,19 +36,21 @@ module LocalPredictor(
 
     always @(Branch_resolved) begin // Update predictor
         $display("Hybrid: Local Predictor: %x", Instr_addr_input);
-        if (Branch_resolved) begin
-            case(bht[Branch_resolved_addr[11:2]])
-                2'b11:pht[bht[Branch_resolved_addr[11:2]]] = pht[bht[Branch_resolved_addr[11:2]]];
-                default: pht[bht[Branch_resolved_addr[11:2]]]++;
-            endcase
-            assign bht[Branch_resolved_addr[11:2]] = bht[Branch_resolved_addr[11:2]] << 1 + Branch_resolved;
-        end
-        else
-            case(pht[bht[Branch_resolved_addr[11:2]]])
-                2'b00:pht[bht[Branch_resolved_addr[11:2]]] = pht[bht[Branch_resolved_addr[11:2]]];
-                default: pht[bht[Branch_resolved_addr[11:2]]]--;
-            endcase
-            assign bht[Branch_resolved_addr[11:2]] = bht[Branch_resolved_addr[11:2]] << 1 + Branch_resolved;
+        if (Branch_resolved_addr != 0) begin
+            if (Branch_resolved) begin
+                case(bht[Branch_resolved_addr[11:2]])
+                    2'b11:pht[bht[Branch_resolved_addr[11:2]]] = pht[bht[Branch_resolved_addr[11:2]]];
+                    default: pht[bht[Branch_resolved_addr[11:2]]]++;
+                endcase
+                assign bht[Branch_resolved_addr[11:2]] = bht[Branch_resolved_addr[11:2]] << 1 + Branch_resolved;
+            end
+            else
+                case(pht[bht[Branch_resolved_addr[11:2]]])
+                    2'b00:pht[bht[Branch_resolved_addr[11:2]]] = pht[bht[Branch_resolved_addr[11:2]]];
+                    default: pht[bht[Branch_resolved_addr[11:2]]]--;
+                endcase
+                assign bht[Branch_resolved_addr[11:2]] = bht[Branch_resolved_addr[11:2]] << 1 + Branch_resolved;
+            end
         end
     end
 endmodule

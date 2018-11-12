@@ -36,19 +36,21 @@ module GlobalPredictor(
 
     always @(Branch_resolved) begin // Update predictor
         $display("Hybrid: Global Predictor: %x", Instr_addr_input);
-        if (Branch_resolved) begin
-            case(pht[ghr])
-                2'b11:pht[ghr] = pht[ghr];
-                default: pht[ghr]++;
-            endcase
-            assign ghr = ghr << 1 + Branch_resolved;
-        end
-        else
-            case(pht[ghr])
-                2'b00:pht[ghr] = pht[ghr];
-                default: pht[ghr]--;
-            endcase
-            assign ghr = ghr << 1 + Branch_resolved;
+        if (Branch_resolved_addr != 0) begin
+            if (Branch_resolved) begin
+                case(pht[ghr])
+                    2'b11:pht[ghr] = pht[ghr];
+                    default: pht[ghr]++;
+                endcase
+                assign ghr = ghr << 1 + Branch_resolved;
+            end
+            else
+                case(pht[ghr])
+                    2'b00:pht[ghr] = pht[ghr];
+                    default: pht[ghr]--;
+                endcase
+                assign ghr = ghr << 1 + Branch_resolved;
+            end
         end
     end
 endmodule
