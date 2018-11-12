@@ -30,6 +30,7 @@ wire[19:0] tag2;
 wire[31:0] target2;
 
 wire[19:0] last_tag;
+wire[9:0] last_idx;
 
 assign idx = {Instr_Addr_IN[11:2]};
 assign cache_set = cache[idx];
@@ -46,15 +47,16 @@ assign tag2 = {cache_set[51:32]};
 assign target2 = {cache_set[31:0]};
 
 assign last_tag = {Branch_addr_IN[31:12]};
+assign last_idx = {Branch_addr_IN[11:2]};
 
 always @(posedge CLK) begin
     /* update the cache if we missed the last time */
     if (Resolution_IN && Branch_resolved_addr_IN != 0) begin
         /* find LRU */
         if (islru1) begin
-            cache[idx] <= {1'b1,valid2,tag2,target2,1'b0,1'b1,last_tag,Branch_resolved_addr_IN};
+            cache[last_idx] <= {1'b1,valid2,tag2,target2,1'b0,1'b1,last_tag,Branch_resolved_addr_IN};
         end else begin
-            cache[idx] <= {1'b0,1'b1,last_tag,Branch_resolved_addr_IN,1'b1,valid1,tag1,target1};
+            cache[last_idx] <= {1'b0,1'b1,last_tag,Branch_resolved_addr_IN,1'b1,valid1,tag1,target1};
         end
         $display("BTB: updating cache with %x => %x", Branch_addr_IN, Branch_resolved_addr_IN);
     end
