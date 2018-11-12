@@ -1,6 +1,6 @@
 `include "config.v"
 //-----------------------------------------
-//           Quick Compare
+//           Always Not Taken
 //-----------------------------------------
 module AlwaysNotTaken(
     input CLK,

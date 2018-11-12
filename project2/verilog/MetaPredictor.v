@@ -1,5 +1,5 @@
 `include "config.v"
-module LocalPredictor(
+module MetaPredictor(
     input CLK,
     input RESET,
     input      [31: 0] Instr_input,	 // instruction
@@ -47,7 +47,7 @@ module LocalPredictor(
                 2'b00:fsm[Branch_resolved_addr[11:2]] = fsm[Branch_resolved_addr[11:2]];
                 default: fsm[Branch_resolved_addr[11:2]]--;
             endcase
-            
+
         end
     end
 endmodule
