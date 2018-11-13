@@ -80,7 +80,7 @@ PHT PHT(
     .Taken_OUT(pht_taken)
 );
 
-always @(*) begin
+always @(posedge CLK or negedge RESET) begin
     if (!RESET || FLUSH) begin
         Taken = 0;
         Taken_addr = 0;

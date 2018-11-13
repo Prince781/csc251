@@ -27,8 +27,9 @@ module MEM(
     input [31:0] Instr1_PC_IN,
 
     input Request_Alt_PC,
-    input[31:0] Alt_PC,
+    input [31:0] Alt_PC,
     input Request_Alt_PC_Predicted,
+    input [31:0] Alt_PC_Predicted,
     input [1:0] Branch_predictions_IN,
 
     input Request_Alt_PC_BP,
@@ -326,9 +327,10 @@ assign MemoryData1 = MemWriteData1_IN;
              Instr_PC_OUT <= Instr1_PC_IN;
              Branch_predictions_OUT <= Branch_predictions_IN;
              $display("MEM: Request_Alt_PC=%X",Request_Alt_PC);
+             /* we mispredicted direction */
              if(Request_Alt_PC_Predicted != Request_Alt_PC) begin
                  if(comment1) begin
-                     $display("MEM:Branch misprediction detected");
+                     $display("MEM:Branch misprediction detected (direction)");
                  end
                  if (Request_Alt_PC_Predicted) begin
                      /* we mispredicted taken, and started fetching from some
@@ -350,6 +352,23 @@ assign MemoryData1 = MemWriteData1_IN;
                      Branch_resolved_addr_MEMBP <= Alt_PC;
                  end
                  Flush <= 1;
+             end
+             else if (Alt_PC_Predicted != Alt_PC) begin
+                 if (Request_Alt_PC) begin
+                     /* we mispredicted location */
+                     if (comment1) begin
+                         $display("MEM:Branch misprediction detected (location)");
+                     end
+                     Request_Alt_PC1 <= 1'b1;
+                     Alt_PC1 <= Alt_PC;
+                     Branch_resolved_MEMBP <= 1'b1;
+                     Branch_resolved_addr_MEMBP <= Alt_PC;
+                     Flush <= 1;
+                 end else begin
+                     Request_Alt_PC1 <= 1'b0;
+                     Branch_resolved_MEMBP <= 1'b0;
+                     Flush <= 0;
+                 end
              end
              else begin
                  /* our instruction from EXE is not a branch; now we see 

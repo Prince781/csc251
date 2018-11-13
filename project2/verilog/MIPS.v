@@ -94,16 +94,11 @@ module MIPS (
     assign unused_i3 = Instr2_fIC;
 `endif
 
-    wire Branch_prediction_BP_dummy;
-`ifdef BP_HYBRID
-    wire [1:0] BP_global_local_BP_dummy;
-`endif
-
-
     wire [31:0] Instr1_dummy1;
     wire [31:0] Instr_PC_dummy1;
     wire [31:0] Instr_PC_Plus4_dummy1;
     wire BP_taken_dummy1;
+    wire [31:0] BP_addr_dummy1;
 `ifdef BP_HYBRID
     wire [1:0] BP_global_local_dummy1;
 `endif
@@ -112,6 +107,7 @@ module MIPS (
     wire [31:0] Instr_PC_dummy2;
     wire [31:0] Instr_PC_Plus4_dummy2;
     wire BP_taken_dummy2;
+    wire [31:0] BP_addr_dummy2;
 `ifdef BP_HYBRID
     wire [1:0] BP_global_local_dummy2;
 `endif
@@ -120,6 +116,7 @@ module MIPS (
     wire [31:0] Instr_PC_dummy3;
     wire [31:0] Instr_PC_Plus4_dummy3;
     wire BP_taken_dummy3;
+    wire [31:0] BP_addr_dummy3;
 `ifdef BP_HYBRID
     wire [1:0] BP_global_local_dummy3;
 `endif
@@ -128,6 +125,7 @@ module MIPS (
     wire [31:0] Instr_PC_dummy4;
     wire [31:0] Instr_PC_Plus4_dummy4;
     wire BP_taken_dummy4;
+    wire [31:0] BP_addr_dummy4;
 `ifdef BP_HYBRID
     wire [1:0] BP_global_local_dummy4;
 `endif
@@ -136,6 +134,7 @@ module MIPS (
     wire [31:0] Instr_PC_dummy5;
     wire [31:0] Instr_PC_Plus4_dummy5;
     wire BP_taken_dummy5;
+    wire [31:0] BP_addr_dummy5;
 `ifdef BP_HYBRID
     wire [1:0] BP_global_local_dummy5;
 `endif
@@ -144,6 +143,7 @@ module MIPS (
     wire [31:0] Instr_PC_dummy6;
     wire [31:0] Instr_PC_Plus4_dummy6;
     wire BP_taken_dummy6;
+    wire [31:0] BP_addr_dummy6;
 `ifdef BP_HYBRID
     wire [1:0] BP_global_local_dummy6;
 `endif
@@ -152,12 +152,15 @@ module MIPS (
     wire [31:0] Instr_PC_dummy7;
     wire [31:0] Instr_PC_Plus4_dummy7;
     wire BP_taken_dummy7;
+    wire [31:0] BP_addr_dummy7;
 `ifdef BP_HYBRID
     wire [1:0] BP_global_local_dummy7;
 `endif
 
     wire BP_taken_IDEXE;
+    wire [31:0] BP_addr_IDEXE;
     wire BP_taken_EXEMEM;
+    wire [31:0] BP_addr_EXEMEM;
 `ifdef BP_HYBRID
     wire [1:0] BP_global_local_IDEXE;
     wire [1:0] BP_global_local_EXEMEM;
@@ -208,7 +211,7 @@ module MIPS (
       .RESET(RESET),
       .Instr_input(Instr1_IFID),
       .Instr_addr_input(Instr_PC_IFID),
-      .Taken(Branch_prediction_BP_dummy)
+      .Taken(BP_taken_dummy1)
       );
 `elsif BP_BIMODAL
     Bimodal Bimodal(
@@ -221,7 +224,7 @@ module MIPS (
         .Branch_resolved(Branch_resolved_MEMBP),
         .Branch_resolved_addr(Branch_resolved_addr_MEMBP),
         .Branch_addr(Branch_addr_MEMBP),
-        .Taken(Branch_prediction_BP_dummy),
+        .Taken(BP_taken_dummy1),
         .Taken_addr(Branch_prediction_addr_BPMEM)
     );
 `elsif BP_HYBRID
@@ -236,16 +239,17 @@ module MIPS (
         .Branch_resolved_addr(Branch_resolved_addr_MEMBP),
         .Branch_addr(Branch_addr_MEMBP),
         .Branch_predictions(BP_global_local_MEMBP),
-        .Taken(Branch_prediction_BP_dummy),
+        .Taken(BP_taken_dummy1),
         .Taken_addr(Branch_prediction_addr_BPMEM),
-        .Branch_predictions_OUT(BP_global_local_BP_dummy)
+        .Branch_predictions_OUT(BP_global_local_dummy1)
     );
 `endif
 
 `ifndef BP_NOTTAKEN
-    assign Branch_prediction_BPMEM = Branch_prediction_BP_dummy;
-    assign Request_Alt_PC_BPIF = Branch_prediction_BP_dummy;
+    assign Branch_prediction_BPMEM = BP_taken_dummy1;
+    assign Request_Alt_PC_BPIF = BP_taken_dummy1;
     assign Alt_PC_BPIF = Branch_prediction_addr_BPMEM;
+    assign BP_addr_dummy1 = Branch_prediction_addr_BPMEM;
 `endif
 
    dummy dummy(
@@ -255,19 +259,10 @@ module MIPS (
            .Instr1_OUT(Instr1_dummy1),
            .Instr_PC_OUT(Instr_PC_dummy1),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy1),
-           .Branch_prediction_OUT(BP_taken_dummy1),
-`ifdef BP_HYBRID
-           .Branch_predictions_OUT(BP_global_local_dummy1),
-`endif
            .STALL(STALL_IDIF),
            .Instr1_IF(Instr1_IFID),
            .Instr_PC_IF(Instr_PC_IFID),
-           .Instr_PC_Plus4_IF(Instr_PC_Plus4_IFID),
-           .Branch_prediction_IN(Branch_prediction_BP_dummy)
-`ifdef BP_HYBRID
-           ,
-           .Branch_predictions_IN(BP_global_local_BP_dummy)
-`endif
+           .Instr_PC_Plus4_IF(Instr_PC_Plus4_IFID)
           );
 
    dummy1 dummy1(
@@ -278,6 +273,7 @@ module MIPS (
            .Instr_PC_OUT(Instr_PC_dummy2),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy2),
            .Branch_prediction_OUT(BP_taken_dummy2),
+           .Branch_prediction_addr_OUT(BP_addr_dummy2),
 `ifdef BP_HYBRID
            .Branch_predictions_OUT(BP_global_local_dummy2),
 `endif
@@ -285,7 +281,8 @@ module MIPS (
            .Instr1_IF(Instr1_dummy1),
            .Instr_PC_IF(Instr_PC_dummy1),
            .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy1),
-           .Branch_prediction_IN(BP_taken_dummy1)
+           .Branch_prediction_IN(BP_taken_dummy1),
+           .Branch_prediction_addr_IN(BP_addr_dummy1)
 `ifdef BP_HYBRID
            ,
            .Branch_predictions_IN(BP_global_local_dummy1)
@@ -300,6 +297,7 @@ module MIPS (
            .Instr_PC_OUT(Instr_PC_dummy3),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy3),
            .Branch_prediction_OUT(BP_taken_dummy3),
+           .Branch_prediction_addr_OUT(BP_addr_dummy3),
 `ifdef BP_HYBRID
            .Branch_predictions_OUT(BP_global_local_dummy3),
 `endif
@@ -307,7 +305,8 @@ module MIPS (
            .Instr1_IF(Instr1_dummy2),
            .Instr_PC_IF(Instr_PC_dummy2),
            .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy2),
-           .Branch_prediction_IN(BP_taken_dummy2)
+           .Branch_prediction_IN(BP_taken_dummy2),
+           .Branch_prediction_addr_IN(BP_addr_dummy2)
 `ifdef BP_HYBRID
            ,
            .Branch_predictions_IN(BP_global_local_dummy2)
@@ -321,6 +320,7 @@ module MIPS (
            .Instr_PC_OUT(Instr_PC_dummy4),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy4),
            .Branch_prediction_OUT(BP_taken_dummy4),
+           .Branch_prediction_addr_OUT(BP_addr_dummy4),
 `ifdef BP_HYBRID
            .Branch_predictions_OUT(BP_global_local_dummy4),
 `endif
@@ -328,7 +328,8 @@ module MIPS (
            .Instr1_IF(Instr1_dummy3),
            .Instr_PC_IF(Instr_PC_dummy3),
            .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy3),
-           .Branch_prediction_IN(BP_taken_dummy3)
+           .Branch_prediction_IN(BP_taken_dummy3),
+           .Branch_prediction_addr_IN(BP_addr_dummy3)
 `ifdef BP_HYBRID
            ,
            .Branch_predictions_IN(BP_global_local_dummy3)
@@ -342,6 +343,7 @@ module MIPS (
            .Instr_PC_OUT(Instr_PC_dummy5),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy5),
            .Branch_prediction_OUT(BP_taken_dummy5),
+           .Branch_prediction_addr_OUT(BP_addr_dummy5),
 `ifdef BP_HYBRID
            .Branch_predictions_OUT(BP_global_local_dummy5),
 `endif
@@ -349,7 +351,8 @@ module MIPS (
            .Instr1_IF(Instr1_dummy4),
            .Instr_PC_IF(Instr_PC_dummy4),
            .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy4),
-           .Branch_prediction_IN(BP_taken_dummy4)
+           .Branch_prediction_IN(BP_taken_dummy4),
+           .Branch_prediction_addr_IN(BP_addr_dummy4)
 `ifdef BP_HYBRID
            ,
            .Branch_predictions_IN(BP_global_local_dummy4)
@@ -363,6 +366,7 @@ module MIPS (
            .Instr_PC_OUT(Instr_PC_dummy6),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy6),
            .Branch_prediction_OUT(BP_taken_dummy6),
+           .Branch_prediction_addr_OUT(BP_addr_dummy6),
 `ifdef BP_HYBRID
            .Branch_predictions_OUT(BP_global_local_dummy6),
 `endif
@@ -370,7 +374,8 @@ module MIPS (
            .Instr1_IF(Instr1_dummy5),
            .Instr_PC_IF(Instr_PC_dummy5),
            .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy5),
-           .Branch_prediction_IN(BP_taken_dummy5)
+           .Branch_prediction_IN(BP_taken_dummy5),
+           .Branch_prediction_addr_IN(BP_addr_dummy5)
 `ifdef BP_HYBRID
            ,
            .Branch_predictions_IN(BP_global_local_dummy5)
@@ -385,6 +390,7 @@ module MIPS (
            .Instr_PC_OUT(Instr_PC_dummy7),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy7),
            .Branch_prediction_OUT(BP_taken_dummy7),
+           .Branch_prediction_addr_OUT(BP_addr_dummy7),
 `ifdef BP_HYBRID
            .Branch_predictions_OUT(BP_global_local_dummy7),
 `endif
@@ -392,7 +398,8 @@ module MIPS (
            .Instr1_IF(Instr1_dummy6),
            .Instr_PC_IF(Instr_PC_dummy6),
            .Instr_PC_Plus4_IF(Instr_PC_Plus4_dummy6),
-           .Branch_prediction_IN(BP_taken_dummy6)
+           .Branch_prediction_IN(BP_taken_dummy6),
+           .Branch_prediction_addr_IN(BP_addr_dummy6)
 `ifdef BP_HYBRID
            ,
            .Branch_predictions_IN(BP_global_local_dummy6)
@@ -438,6 +445,7 @@ module MIPS (
 		.Instr1_PC_IN(Instr_PC_dummy7),
 		.Instr1_PC_Plus4_IN(Instr_PC_Plus4_dummy7),
                 .Branch_prediction_IN(BP_taken_dummy7),
+                .Branch_prediction_addr_IN(BP_addr_dummy7),
 `ifdef BP_HYBRID
                 .Branch_predictions_IN(BP_global_local_dummy7),
 `endif
@@ -447,6 +455,7 @@ module MIPS (
 		.Alt_PC(Alt_PC_IDEXE),
 		.Request_Alt_PC(Request_Alt_PC_IDEXE),
                 .Branch_prediction_OUT(BP_taken_IDEXE),
+                .Branch_prediction_addr_OUT(BP_addr_IDEXE),
 `ifdef BP_HYBRID
                 .Branch_predictions_OUT(BP_global_local_IDEXE),
 `endif
@@ -509,6 +518,7 @@ module MIPS (
                 .Request_Alt_PC(Request_Alt_PC_IDEXE),
                 .Alt_PC(Alt_PC_IDEXE),
                 .Branch_prediction_IN(BP_taken_IDEXE),
+                .Branch_prediction_addr_IN(BP_addr_EXEMEM),
 `ifdef BP_HYBRID
                 .Branch_predictions_IN(BP_global_local_IDEXE),
 `endif
@@ -538,7 +548,8 @@ module MIPS (
 		.MemWrite1_OUT(MemWrite1_EXEMEM),
                 .Alt_PC1(Alt_PC_EXEMEM),
                 .Request_Alt_PC1(Request_Alt_PC_EXEMEM),
-                .Branch_prediction_OUT(BP_taken_EXEMEM)
+                .Branch_prediction_OUT(BP_taken_EXEMEM),
+                .Branch_prediction_addr_OUT(BP_addr_EXEMEM)
 `ifdef BP_HYBRID
                 ,
                 .Branch_predictions_OUT(BP_global_local_EXEMEM)
@@ -598,6 +609,7 @@ module MIPS (
         .Request_Alt_PC(Request_Alt_PC_EXEMEM),
         .Alt_PC(Alt_PC_EXEMEM),
         .Request_Alt_PC_Predicted(BP_taken_EXEMEM),
+        .Alt_PC_Predicted(BP_addr_EXEMEM),
 `ifdef BP_HYBRID
         .Branch_predictions_IN(BP_global_local_EXEMEM),
 `endif
