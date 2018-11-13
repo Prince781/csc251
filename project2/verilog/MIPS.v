@@ -189,6 +189,23 @@ module MIPS (
         .Taken(Branch_prediction_BP_dummy),
         .Taken_addr(Branch_prediction_addr_BPMEM)
     );
+`elsif BP_HYBRID
+    HybridPredictor HybridPredictor(
+        .CLK(CLK),
+        .RESET(RESET),
+        .FLUSH(FLUSH),
+        .Instr_input(Instr1_IFID),
+        .Instr_addr_input(Instr_PC_IFID),
+        .Branch_instr(Instr_MEMBP),
+        .Branch_resolved(Branch_resolved_MEMBP),
+        .Branch_resolved_addr(Branch_resolved_addr_MEMBP),
+        .Branch_addr(Branch_addr_MEMBP),
+        .Taken(Branch_prediction_BP_dummy),
+        .Taken_addr(Branch_prediction_addr_BPMEM)
+    );
+`endif
+
+`ifndef BP_NOTTAKEN
     assign Branch_prediction_BPMEM = Branch_prediction_BP_dummy;
 `endif
 
@@ -472,7 +489,7 @@ module MIPS (
 
     wire FLUSH;
 
-`ifdef BP_BIMODAL
+`ifndef BP_NOTTAKEN
     assign Branch_resolved_MEMBP = Request_Alt_PC_MEMIF;
     assign Branch_resolved_addr_MEMBP = Alt_PC_MEMIF;
 `endif
