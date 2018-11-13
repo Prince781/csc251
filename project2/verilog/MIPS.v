@@ -249,9 +249,8 @@ module MIPS (
            .Instr1_OUT(Instr1_dummy1),
            .Instr_PC_OUT(Instr_PC_dummy1),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy1),
-           .Branch_prediction_OUT(BP_taken_dummy1)
+           .Branch_prediction_OUT(BP_taken_dummy1),
 `ifdef BP_HYBRID
-           ,
            .Branch_predictions_OUT(BP_global_local_dummy1),
 `endif
            .STALL(STALL_IDIF),
@@ -272,9 +271,8 @@ module MIPS (
            .Instr1_OUT(Instr1_dummy2),
            .Instr_PC_OUT(Instr_PC_dummy2),
            .Instr_PC_Plus4(Instr_PC_Plus4_dummy2),
-           .Branch_prediction_OUT(BP_taken_dummy2)
+           .Branch_prediction_OUT(BP_taken_dummy2),
 `ifdef BP_HYBRID
-           ,
            .Branch_predictions_OUT(BP_global_local_dummy2),
 `endif
            .STALL(STALL_IDIF),
