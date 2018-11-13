@@ -14,10 +14,9 @@ module MetaPredictor(
     reg [1:0] fsm [1023:0]; // Branch History Table
 
     always @(posedge CLK or negedge RESET) begin
-        $display("Hybrid: Meta Predictor: %x", Instr_addr_input);
         if (!RESET) begin
             Use_global <= 0;
-            $display("Bimodal [RESET]");
+            $display("Hybrid: Meta Predictor [RESET]");
         end else if (CLK) begin
             // Do prediction
             case(Instr_input[31:26])

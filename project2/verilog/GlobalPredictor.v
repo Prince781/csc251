@@ -15,10 +15,9 @@ module GlobalPredictor(
     reg [1:0] pht [4095:0]; // 12 bit Global History Register needs 2^12 = 4096 entries
 
     always @(posedge CLK or negedge RESET) begin
-        $display("Hybrid: Global Predictor: %x", Instr_addr_input);
         if (!RESET) begin
             Taken <= 0;
-            $display("Hybrid [RESET]");
+            $display("Hybrid: Global Predictor [RESET]");
         end else if (CLK) begin
             // Do prediction
             case(Instr_input[31:26])

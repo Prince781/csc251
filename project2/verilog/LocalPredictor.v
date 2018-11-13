@@ -15,10 +15,9 @@ module LocalPredictor(
     reg [1:0] pht [1023:0]; // 10 bit Branch History Register needs 2^10 = 1024 entries
 
     always @(posedge CLK or negedge RESET) begin
-        $display("Hybrid: Local Predictor: %x", Instr_addr_input);
         if (!RESET) begin
             Taken <= 0;
-            $display("Hybrid [RESET]");
+            $display("Hybrid: Local Predictor [RESET]");
         end else if (CLK) begin
             // Do prediction
             case(Instr_input[31:26])
@@ -41,7 +40,7 @@ module LocalPredictor(
             $display("Hybrid: Local Predictor: %x", Instr_addr_input);
             if (Branch_resolved_addr != 0) begin
                 if (Branch_resolved) begin
-                    case(bht[Branch_resolved_addr[11:2]])
+                    case(pht[bht[Branch_resolved_addr[11:2]]])
                         2'b11:pht[bht[Branch_resolved_addr[11:2]]] = pht[bht[Branch_resolved_addr[11:2]]];
                         default: pht[bht[Branch_resolved_addr[11:2]]]++;
                     endcase
