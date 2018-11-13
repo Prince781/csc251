@@ -15,59 +15,59 @@ module BTB(
     output reg Valid_OUT                    /* whether the entry is valid */
 );
 
-/* (32 + 1 valid bit + 20-bit tag + 1 LRU bit) * 2-way = 108 bits */
-reg[107:0] cache [1023:0];  // [107:54] = entry 1, [53:0] = entry 2
+/* (1 LRU bit + 1 valid bit + 21-bit tag + 32 bit addr) * 2-way = 110 bits */
+reg[109:0] cache [511:0];  // [109:55] = entry 1, [54:0] = entry 2
 
-wire[9:0] idx;
-wire[107:0] cache_set;
-wire[19:0] tag_in;
+wire[8:0] idx;
+wire[109:0] cache_set;
+wire[20:0] tag_in;
 
 wire valid1;
-wire[19:0] tag1;
+wire[20:0] tag1;
 wire[31:0] target1;
 wire valid2;
-wire[19:0] tag2;
+wire[20:0] tag2;
 wire[31:0] target2;
 
-assign idx = {Instr_Addr_IN[11:2]};
+assign idx = {Instr_Addr_IN[10:2]};
 assign cache_set = cache[idx];
-assign tag_in = {Instr_Addr_IN[31:12]};
+assign tag_in = {Instr_Addr_IN[31:11]};
 
-assign valid1 = {cache_set[106]};
-assign tag1 = {cache_set[105:86]};
-assign target1 = {cache_set[85:54]};
+assign valid1 = {cache_set[108]};
+assign tag1 = {cache_set[107:87]};
+assign target1 = {cache_set[86:55]};
 
-assign valid2 = {cache_set[52]};
-assign tag2 = {cache_set[51:32]};
+assign valid2 = {cache_set[53]};
+assign tag2 = {cache_set[52:32]};
 assign target2 = {cache_set[31:0]};
 
 
 
-wire[9:0] last_idx;
-wire[107:0] last_cache_set;
-wire[19:0] last_tag_in;
+wire[8:0] last_idx;
+wire[109:0] last_cache_set;
+wire[20:0] last_tag_in;
 
 wire last_islru1;
 wire last_valid1;
-wire[19:0] last_tag1;
+wire[20:0] last_tag1;
 wire[31:0] last_target1;
 wire last_islru2;
 wire last_valid2;
-wire[19:0] last_tag2;
+wire[20:0] last_tag2;
 wire[31:0] last_target2;
 
-assign last_idx = {Branch_addr_IN[11:2]};
+assign last_idx = {Branch_addr_IN[10:2]};
 assign last_cache_set = cache[last_idx];
-assign last_tag_in = {Branch_addr_IN[31:12]};
+assign last_tag_in = {Branch_addr_IN[31:11]};
 
-assign last_islru1 = {last_cache_set[107]};
-assign last_valid1 = {last_cache_set[106]};
-assign last_tag1 = {last_cache_set[105:86]};
-assign last_target1 = {last_cache_set[85:54]};
+assign last_islru1 = {last_cache_set[109]};
+assign last_valid1 = {last_cache_set[108]};
+assign last_tag1 = {last_cache_set[107:87]};
+assign last_target1 = {last_cache_set[86:55]};
 
-assign last_islru2 = {last_cache_set[53]};
-assign last_valid2 = {last_cache_set[52]};
-assign last_tag2 = {last_cache_set[51:32]};
+assign last_islru2 = {last_cache_set[54]};
+assign last_valid2 = {last_cache_set[53]};
+assign last_tag2 = {last_cache_set[52:32]};
 assign last_target2 = {last_cache_set[31:0]};
 
 always @(posedge CLK or negedge RESET) begin
