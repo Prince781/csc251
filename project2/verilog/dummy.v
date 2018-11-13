@@ -30,7 +30,7 @@ module  dummy
     input [1:0] Branch_predictions_IN
 );
 always @(posedge CLK or negedge RESET) begin
-    if(!RESET || FLUSH || Branch_prediction_IN) begin //you need to implement stall signal to fulsh the pipeline 
+    if(!RESET || FLUSH) begin //you need to implement stall signal to fulsh the pipeline 
         Instr1_OUT <= 0;
         Instr_PC_OUT <= 0;
         Instr_PC_Plus4 <= 0;

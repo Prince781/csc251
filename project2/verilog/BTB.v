@@ -68,8 +68,6 @@ assign last_valid2 = {last_cache_set[52]};
 assign last_tag2 = {last_cache_set[51:32]};
 assign last_target2 = {last_cache_set[31:0]};
 
-
-
 always @(posedge CLK) begin
     /* update the cache if we missed the last time */
     if (Resolution_IN && Branch_resolved_addr_IN != 0) begin

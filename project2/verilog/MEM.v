@@ -58,6 +58,8 @@ module MEM(
     output [31:0] data_address_2DM,
     output  [31:0] Alt_PC1,
     output  Request_Alt_PC1,
+    output [31:0] Branch_resolved_addr_MEMBP,
+    output Branch_resolved_MEMBP,
     output reg [1:0] data_write_size_2DM,
     input [31:0] data_read_fDM,
     output MemRead_2DM,
@@ -312,6 +314,8 @@ assign MemoryData1 = MemWriteData1_IN;
              Instr_PC_OUT <= 32'b0;
              Flush <= 0;
              Branch_predictions_OUT <= 0;
+             Branch_resolved_MEMBP <= 0;
+             Branch_resolved_addr_MEMBP <= 0;
          end else if(CLK) begin
              Instr1_OUT <= Instr1_IN;
              Instr1_PC_OUT <= Instr1_PC_IN;
@@ -326,8 +330,25 @@ assign MemoryData1 = MemWriteData1_IN;
                  if(comment1) begin
                      $display("MEM:Branch misprediction detected");
                  end
-                 Request_Alt_PC1 <= Request_Alt_PC;
-                 Alt_PC1 <= Alt_PC;
+                 if (Request_Alt_PC_Predicted) begin
+                     /* we mispredicted taken, and started fetching from some
+                      * other place (the predicted target of this branch)
+                      * To fix things, we have to request a fake "alt PC"
+                      * that is the next instruction after this branch.
+                      */
+                     Request_Alt_PC1 <= 1'b1;
+                     Alt_PC1 <= Instr1_PC_IN + 4;
+                     /* but we didn't actually take the branch */
+                     Branch_resolved_MEMBP <= 0;
+                     Branch_resolved_addr_MEMBP <= 0;
+                 end else begin
+                     /* we mispredicted not taken */
+                     Request_Alt_PC1 <= Request_Alt_PC;
+                     Alt_PC1 <= Alt_PC;
+                     /* so we did actually take the branch */
+                     Branch_resolved_MEMBP <= Request_Alt_PC;
+                     Branch_resolved_addr_MEMBP <= Alt_PC;
+                 end
                  Flush <= 1;
              end
              else begin
@@ -336,8 +357,11 @@ assign MemoryData1 = MemWriteData1_IN;
                  if (Request_Alt_PC_BP) begin
                      Request_Alt_PC1 <= Request_Alt_PC_BP;
                      Alt_PC1 <= Alt_PC_BP;
+                     Branch_resolved_MEMBP <= Request_Alt_PC_BP;
+                     Branch_resolved_addr_MEMBP <= Alt_PC_BP;
                  end else begin
                      Request_Alt_PC1 <= 0;
+                     Branch_resolved_MEMBP <= 0;
                  end
                  Flush <= 0;
              end

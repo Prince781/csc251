@@ -167,6 +167,8 @@ module MIPS (
 
     wire [31:0] Alt_PC_MEMIF;
     wire Request_Alt_PC_MEMIF;
+    wire [31:0] Alt_PC_BPIF;
+    wire Request_Alt_PC_BPIF;
 
     // Branch result for BP
     wire        Branch_resolved_MEMBP;
@@ -192,8 +194,10 @@ module MIPS (
         .Instr_PC_OUT(Instr_PC_IFID),
         .Instr_PC_Plus4(Instr_PC_Plus4_IFID),
         .STALL(STALL_IDIF),
-        .Request_Alt_PC(Request_Alt_PC_MEMIF),
-        .Alt_PC(Alt_PC_MEMIF),
+        .Request_Alt_PC_MEM(Request_Alt_PC_MEMIF),
+        .Alt_PC_MEM(Alt_PC_MEMIF),
+        .Request_Alt_PC_BP(Request_Alt_PC_BPIF),
+        .Alt_PC_BP(Alt_PC_BPIF),
         .Instr_address_2IM(Instr_address_2IC),
         .Instr1_fIM(Instr1_fIC)
     );
@@ -240,6 +244,8 @@ module MIPS (
 
 `ifndef BP_NOTTAKEN
     assign Branch_prediction_BPMEM = Branch_prediction_BP_dummy;
+    assign Request_Alt_PC_BPIF = Branch_prediction_BP_dummy;
+    assign Alt_PC_BPIF = Branch_prediction_addr_BPMEM;
 `endif
 
    dummy dummy(
@@ -584,12 +590,6 @@ module MIPS (
 
     wire FLUSH;
 
-`ifndef BP_NOTTAKEN
-    assign Branch_resolved_MEMBP = Request_Alt_PC_MEMIF;
-    assign Branch_resolved_addr_MEMBP = Alt_PC_MEMIF;
-`endif
-
-
     MEM MEM(
         .CLK(CLK),
         .RESET(RESET),
@@ -620,6 +620,10 @@ module MIPS (
         .MemRead_2DM(read_2DC),
         .Request_Alt_PC1(Request_Alt_PC_MEMIF),
         .Alt_PC1(Alt_PC_MEMIF),
+`ifndef BP_NOTTAKEN
+        .Branch_resolved_MEMBP(Branch_resolved_MEMBP),
+        .Branch_resolved_addr_MEMBP(Branch_resolved_addr_MEMBP),
+`endif
         .MemWrite_2DM(write_2DC),
 `ifdef HAS_FORWARDING
         .WriteData1_async(BypassData1_MEMID),

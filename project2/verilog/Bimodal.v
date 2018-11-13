@@ -76,14 +76,14 @@ PHT PHT(
     .Taken_OUT(pht_taken)
 );
 
-always @(posedge CLK or negedge RESET) begin
+always @(*) begin
     if (!RESET || FLUSH) begin
-        Taken <= 0;
-        Taken_addr <= 0;
+        Taken = 0;
+        Taken_addr = 0;
         $display("Bimodal [RESET]");
-    end else if (CLK) begin
-        Taken <= pht_taken & btb_valid;
-        Taken_addr <= btb_addr;
+    end else begin
+        Taken = pht_taken & btb_valid;
+        Taken_addr = btb_addr;
         $display("Bimodal: instr@%x=%x Taken? %x => %x", Instr_addr_input, Instr_input, pht_taken & btb_valid, btb_addr);
     end
     if (is_branch_last) begin

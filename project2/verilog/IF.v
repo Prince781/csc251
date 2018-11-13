@@ -21,14 +21,22 @@ module  IF
     input STALL,
     
     //There was probably a branch -- please load the alternate PC instead of Instr_PC_Plus4.
-    input Request_Alt_PC,
+    input Request_Alt_PC_MEM,
+    input Request_Alt_PC_BP,
     //Alternate PC to load
-    input [31:0] Alt_PC, 
+    input [31:0] Alt_PC_MEM, 
+    input [31:0] Alt_PC_BP,
     //Address from which we want to fetch an instruction
     output [31:0] Instr_address_2IM,
     //Instruction received from instruction memory
     input [31:0]   Instr1_fIM
 );
+
+    wire Request_Alt_PC;
+    wire [31:0] Alt_PC;
+
+    assign Request_Alt_PC = Request_Alt_PC_MEM | Request_Alt_PC_BP;
+    assign Alt_PC = (Request_Alt_PC_MEM) ? Alt_PC_MEM : (Request_Alt_PC_BP ? Alt_PC_BP : 32'd0);
 
     wire [31:0] IncrementAmount;
     assign IncrementAmount = 32'd4; //NB: This might get modified for superscalar.
@@ -48,7 +56,7 @@ always @(posedge CLK or negedge RESET) begin
     end if (!RESET && Request_Alt_PC) begin
         Instr_PC_Plus4 <= Alt_PC+IncrementAmount;   
     end else if(CLK) begin
-        if(!STALL) begin
+        if(!STALL && !Request_Alt_PC_BP) begin
                 Instr1_OUT  <= Instr1_fIM;
                 Instr_PC_OUT<= Instr_address_2IM;
                 $display("FETCH:ReqAlt=%d",Request_Alt_PC);
@@ -62,7 +70,7 @@ always @(posedge CLK or negedge RESET) begin
                 $display("FETCH:ReqAlt[%d]=%x",Request_Alt_PC,Alt_PC);
 `endif
         end else begin
-            if (FLUSH) begin
+            if (FLUSH || Request_Alt_PC_BP) begin
                 $display("FETCH [FLUSH]: Alt_PC = %x", Alt_PC);
                 Instr_PC_Plus4 <= Alt_PC;
                 Instr1_OUT <= 0;
