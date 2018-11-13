@@ -6,7 +6,7 @@ module GlobalPredictor(
     input      [31: 0] Instr_input,	 // instruction
     input      [31: 0] Instr_addr_input, // Inst Address
     input      Branch_resolved,
-    input      [31: 0] Branch_resolved_addr,
+    input      [31: 0] Branch_addr_IN,
     output Taken // main output of module - whether we jump/branch or not
     // 1 if branch
     // 0 if not
@@ -39,7 +39,7 @@ module GlobalPredictor(
             endcase
             // Update predictor
             $display("Hybrid: Global Predictor: %x", Instr_addr_input);
-            if (Branch_resolved_addr != 0) begin
+            if (Branch_addr_IN != 0) begin
                 if (Branch_resolved) begin
                     case(pht[ghr])
                         2'b11:pht[ghr] = pht[ghr];

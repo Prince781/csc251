@@ -6,7 +6,7 @@ module MetaPredictor(
     input      [31: 0] Instr_input,	 // instruction
     input      [31: 0] Instr_addr_input, // Inst Address
     input      Branch_resolved,
-    input      [31:0] Branch_resolved_addr,
+    input      [31:0] Branch_addr_IN,
     output Use_global // main output of module - whether we use global or local
     // 1 = global
     // 0 = local
@@ -38,18 +38,18 @@ module MetaPredictor(
             endcase
             // Update predictor
             $display("Hybrid: Meta Predictor: %x", Instr_addr_input);
-            if (Branch_resolved_addr != 0) begin
+            if (Branch_addr_IN != 0) begin
                 if (Branch_resolved) begin
-                    case(fsm[Branch_resolved_addr[11:2]])
-                        2'b11:fsm[Branch_resolved_addr[11:2]] = fsm[Branch_resolved_addr[11:2]];
-                        default: fsm[Branch_resolved_addr[11:2]]++;
+                    case(fsm[Branch_addr_IN[11:2]])
+                        2'b11:fsm[Branch_addr_IN[11:2]] = fsm[Branch_addr_IN[11:2]];
+                        default: fsm[Branch_addr_IN[11:2]]++;
                     endcase
 
                 end
                 else begin
-                    case(fsm[Branch_resolved_addr[11:2]])
-                        2'b00:fsm[Branch_resolved_addr[11:2]] = fsm[Branch_resolved_addr[11:2]];
-                        default: fsm[Branch_resolved_addr[11:2]]--;
+                    case(fsm[Branch_addr_IN[11:2]])
+                        2'b00:fsm[Branch_addr_IN[11:2]] = fsm[Branch_addr_IN[11:2]];
+                        default: fsm[Branch_addr_IN[11:2]]--;
                     endcase
 
                 end

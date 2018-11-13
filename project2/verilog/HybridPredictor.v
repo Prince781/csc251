@@ -74,7 +74,7 @@ MetaPredictor MetaPredictor(
     .RESET(RESET),
     .FLUSH(FLUSH),
     .Branch_resolved(last_branch_resolved),
-    .Branch_resolved_addr(last_branch_addr),
+    .Branch_addr_IN(last_branch_addr),
     .Instr_addr_input(Instr_addr_input),
     .Instr_input(Instr_input),
     .Use_global(meta_use_global)
@@ -87,7 +87,7 @@ GlobalPredictor GlobalPredictor(
     .Instr_input(Instr_input),
     .Instr_addr_input(Instr_addr_input),
     .Branch_resolved(last_branch_resolved),
-    .Branch_resolved_addr(last_branch_addr),
+    .Branch_addr_IN(last_branch_addr),
     .Taken(global_taken)
 );
 
@@ -98,7 +98,7 @@ LocalPredictor LocalPredictor(
     .Instr_input(Instr_input),
     .Instr_addr_input(Instr_addr_input),
     .Branch_resolved(last_branch_resolved),
-    .Branch_resolved_addr(last_branch_addr),
+    .Branch_addr_IN(last_branch_addr),
     .Taken(local_taken)
 );
 
