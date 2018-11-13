@@ -4,6 +4,8 @@
  ************************/
 module BTB(
     input CLK,
+    input RESET,
+    input FLUSH,
     input Resolution_IN,                    /* whether the last branch resolved */
     input [31:0] Branch_addr_IN,            /* the addr of the last branch */
     input [31:0] Branch_resolved_addr_IN,   /* where the last branch resolved to */
@@ -68,7 +70,7 @@ assign last_valid2 = {last_cache_set[52]};
 assign last_tag2 = {last_cache_set[51:32]};
 assign last_target2 = {last_cache_set[31:0]};
 
-always @(posedge CLK) begin
+always @(posedge CLK or negedge RESET) begin
     /* update the cache if we missed the last time */
     if (Resolution_IN && Branch_resolved_addr_IN != 0) begin
         /* find LRU */
@@ -80,35 +82,41 @@ always @(posedge CLK) begin
         $display("BTB: updating cache with %x => %x", Branch_addr_IN, Branch_resolved_addr_IN);
     end
 
-    if (Is_Branch_IN) begin
-        if (valid1 && tag_in == tag1) begin
-            Addr_OUT = target1;
-            Valid_OUT = 1'b1;
-            cache[idx] = {1'b1,valid2,tag2,target2,1'b0,valid1,tag1,target1};
-            $display("BTB: hit in block 1");
-        end else if (valid2 && tag_in == tag2) begin
-            Addr_OUT = target2;
-            Valid_OUT = 1'b1;
-            cache[idx] = {1'b0,valid2,tag2,target2,1'b1,valid1,tag1,target1};
-            $display("BTB: hit in block 2");
-        end else begin  /* cache miss */
-            if (valid1 | valid2) begin
-                $display("BTB: PC tag: %x, tag1: %x, tag2: %x", tag_in, tag1, tag2);
-            end
-            Addr_OUT = 0;
-            Valid_OUT = 1'b0;
-            $display("BTB: cache miss");
-        end
-
-        if (Addr_OUT != 0) begin
-            $display("BTB: valid entry %x (PC) => %x", Instr_Addr_IN, Addr_OUT);
-        end else begin
-            $display("BTB: no entry for %x (PC)", Instr_Addr_IN);
-        end
-    end else begin  /* not a branch */
+    if (FLUSH || !RESET) begin
         Addr_OUT = 0;
         Valid_OUT = 1'b0;
-        $display("BTB: current instr not a branch");
+        $display("BTB: [FLUSH]");
+    end else begin
+        if (Is_Branch_IN) begin
+            if (valid1 && tag_in == tag1) begin
+                Addr_OUT = target1;
+                Valid_OUT = 1'b1;
+                cache[idx] = {1'b1,valid2,tag2,target2,1'b0,valid1,tag1,target1};
+                $display("BTB: hit in block 1");
+            end else if (valid2 && tag_in == tag2) begin
+                Addr_OUT = target2;
+                Valid_OUT = 1'b1;
+                cache[idx] = {1'b0,valid2,tag2,target2,1'b1,valid1,tag1,target1};
+                $display("BTB: hit in block 2");
+            end else begin  /* cache miss */
+                if (valid1 | valid2) begin
+                    $display("BTB: PC tag: %x, tag1: %x, tag2: %x", tag_in, tag1, tag2);
+                end
+                Addr_OUT = 0;
+                Valid_OUT = 1'b0;
+                $display("BTB: cache miss");
+            end
+
+            if (Addr_OUT != 0) begin
+                $display("BTB: valid entry %x (PC) => %x", Instr_Addr_IN, Addr_OUT);
+            end else begin
+                $display("BTB: no entry for %x (PC)", Instr_Addr_IN);
+            end
+        end else begin  /* not a branch */
+            Addr_OUT = 0;
+            Valid_OUT = 1'b0;
+            $display("BTB: current instr not a branch");
+        end
     end
 end
 
