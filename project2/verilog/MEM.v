@@ -339,7 +339,7 @@ assign MemoryData1 = MemWriteData1_IN;
                       * that is the next instruction after this branch.
                       */
                      Request_Alt_PC1 <= 1'b1;
-                     Alt_PC1 <= Instr1_PC_IN + 4;
+                     Alt_PC1 <= Instr1_PC_IN + 8;
                      /* but we didn't actually take the branch */
                      Branch_resolved_MEMBP <= 0;
                      Branch_resolved_addr_MEMBP <= 0;
