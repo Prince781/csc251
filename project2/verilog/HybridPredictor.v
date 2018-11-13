@@ -72,6 +72,7 @@ BTB BTB(
 MetaPredictor MetaPredictor(
     .CLK(CLK),
     .RESET(RESET),
+    .FLUSH(FLUSH),
     .Branch_resolved(last_branch_resolved),
     .Branch_resolved_addr(last_branch_addr),
     .Instr_addr_input(Instr_addr_input),
@@ -82,6 +83,7 @@ MetaPredictor MetaPredictor(
 GlobalPredictor GlobalPredictor(
     .CLK(CLK),
     .RESET(RESET),
+    .FLUSH(FLUSH),
     .Instr_input(Instr_input),
     .Instr_addr_input(Instr_addr_input),
     .Branch_resolved(last_branch_resolved),
@@ -92,6 +94,7 @@ GlobalPredictor GlobalPredictor(
 LocalPredictor LocalPredictor(
     .CLK(CLK),
     .RESET(RESET),
+    .FLUSH(FLUSH),
     .Instr_input(Instr_input),
     .Instr_addr_input(Instr_addr_input),
     .Branch_resolved(last_branch_resolved),

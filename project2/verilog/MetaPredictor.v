@@ -2,6 +2,7 @@
 module MetaPredictor(
     input CLK,
     input RESET,
+    input FLUSH,
     input      [31: 0] Instr_input,	 // instruction
     input      [31: 0] Instr_addr_input, // Inst Address
     input      Branch_resolved,
@@ -14,7 +15,7 @@ module MetaPredictor(
     reg [1:0] fsm [1023:0]; // Branch History Table
 
     always @(posedge CLK or negedge RESET) begin
-        if (!RESET) begin
+        if (!RESET || FLUSH) begin
             Use_global <= 0;
             $display("Hybrid: Meta Predictor [RESET]");
         end else if (CLK) begin

@@ -2,6 +2,7 @@
 module GlobalPredictor(
     input CLK,
     input RESET,
+    input FLUSH,
     input      [31: 0] Instr_input,	 // instruction
     input      [31: 0] Instr_addr_input, // Inst Address
     input      Branch_resolved,
@@ -15,7 +16,7 @@ module GlobalPredictor(
     reg [1:0] pht [4095:0]; // 12 bit Global History Register needs 2^12 = 4096 entries
 
     always @(posedge CLK or negedge RESET) begin
-        if (!RESET) begin
+        if (!RESET || FLUSH) begin
             Taken <= 0;
             $display("Hybrid: Global Predictor [RESET]");
         end else if (CLK) begin

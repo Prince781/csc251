@@ -2,6 +2,7 @@
 module LocalPredictor(
     input CLK,
     input RESET,
+    input FLUSH,
     input      [31: 0] Instr_input,	 // instruction
     input      [31: 0] Instr_addr_input, // Inst Address
     input      Branch_resolved,
@@ -15,7 +16,7 @@ module LocalPredictor(
     reg [1:0] pht [1023:0]; // 10 bit Branch History Register needs 2^10 = 1024 entries
 
     always @(posedge CLK or negedge RESET) begin
-        if (!RESET) begin
+        if (!RESET || FLUSH) begin
             Taken <= 0;
             $display("Hybrid: Local Predictor [RESET]");
         end else if (CLK) begin
