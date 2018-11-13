@@ -10,9 +10,14 @@ module HybridPredictor(
     input Branch_resolved,              /* whether the last branch resolved */
     input [31:0] Branch_resolved_addr,  /* the address the last branch resolved to */
     input [31:0] Branch_addr,           /* the address of the last branch instruction */
+    input [1:0] Branch_predictions,     /* [1] = global, [0] = local prediction; from latest-resolved branch */
     output Taken,                       /* whether the branch is taken */
-    output [31:0] Taken_addr            /* the predicted branch address */
+    output [31:0] Taken_addr,           /* the predicted branch address */
+    output [1:0] Branch_predictions_OUT /* the global/local predictions for the current branch (if it is one) */
 );
+
+wire Branch_local_prediction;
+wire Branch_global_prediction;
 
 wire last_branch_resolved;
 wire [31:0] last_branch_addr;
@@ -29,6 +34,9 @@ wire global_taken;
 wire local_taken;
 wire [31:0] btb_addr;
 wire btb_valid;
+
+assign Branch_global_prediction = Branch_predictions[1];
+assign Branch_local_prediction = Branch_predictions[0];
 
 Decoder #(.TAG("BTB-BranchInstr")) IsBranch1(
     .Instr(Branch_instr),
@@ -72,8 +80,9 @@ BTB BTB(
 MetaPredictor MetaPredictor(
     .CLK(CLK),
     .RESET(RESET),
-    .FLUSH(FLUSH),
     .Branch_resolved(last_branch_resolved),
+    .Branch_local_prediction(Branch_local_prediction),
+    .Branch_global_prediction(Branch_global_prediction),
     .Branch_addr_IN(last_branch_addr),
     .Instr_addr_input(Instr_addr_input),
     .Instr_input(Instr_input),
@@ -83,7 +92,6 @@ MetaPredictor MetaPredictor(
 GlobalPredictor GlobalPredictor(
     .CLK(CLK),
     .RESET(RESET),
-    .FLUSH(FLUSH),
     .Instr_input(Instr_input),
     .Instr_addr_input(Instr_addr_input),
     .Branch_resolved(last_branch_resolved),
@@ -94,7 +102,6 @@ GlobalPredictor GlobalPredictor(
 LocalPredictor LocalPredictor(
     .CLK(CLK),
     .RESET(RESET),
-    .FLUSH(FLUSH),
     .Instr_input(Instr_input),
     .Instr_addr_input(Instr_addr_input),
     .Branch_resolved(last_branch_resolved),
@@ -106,10 +113,12 @@ always @(posedge CLK or negedge RESET) begin
     if (!RESET || FLUSH) begin
         Taken <= 0;
         Taken_addr <= 0;
+        Branch_predictions_OUT <= 0;
         $display("Hybrid [RESET]");
     end else if (CLK) begin
         Taken <= (meta_use_global ? global_taken : local_taken) & btb_valid;
         Taken_addr <= btb_addr;
+        Branch_predictions_OUT <= {global_taken,local_taken};
         $display("Hybrid: instr@%x=%x Taken? %x => %x", Instr_addr_input, Instr_input, (meta_use_global ? global_taken : local_taken) & btb_valid, btb_addr);
     end
     if (is_branch_last) begin

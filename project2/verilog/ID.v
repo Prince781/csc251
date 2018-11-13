@@ -37,6 +37,7 @@ module ID(
 
 	 //Alternate PC for next fetch (branch/jump destination)
     input Branch_prediction_IN,
+    input [1:0] Branch_predictions_IN,
     output reg [31:0]Alt_PC,
     //Actually use alternate PC
     output reg Request_Alt_PC,
@@ -67,6 +68,7 @@ module ID(
     //Shift amount [for ALU functions] (passed to EXE)
     output reg [4:0]ShiftAmount1_OUT,
     output reg Branch_prediction_OUT,
+    output reg [1:0] Branch_predictions_OUT,
 
 `ifdef HAS_FORWARDING
     //Bypass inputs for calculations that have completed EXE
@@ -301,6 +303,7 @@ RegFile RegFile (
              FORCE_FREEZE <= 0;
              INHIBIT_FREEZE <= 0;
              Branch_prediction_OUT <= 0;
+             Branch_predictions_OUT <= 0;
              if (FLUSH) begin
                  $display("ID: FLUSH");
              end else begin
@@ -310,6 +313,7 @@ RegFile RegFile (
              Alt_PC <= Alt_PC1;
              Request_Alt_PC <= Request_Alt_PC1;
              Branch_prediction_OUT <= Branch_prediction_IN;
+             Branch_predictions_OUT <= Branch_predictions_IN;
              $display("ID:evaluation SBC=%d; syscal1=%d",syscall_bubble_counter,syscal1);
              case (syscall_bubble_counter)
                  5,4,3: begin

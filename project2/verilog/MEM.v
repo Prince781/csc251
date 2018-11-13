@@ -29,6 +29,7 @@ module MEM(
     input Request_Alt_PC,
     input[31:0] Alt_PC,
     input Request_Alt_PC_Predicted,
+    input [1:0] Branch_predictions_IN,
 
     input Request_Alt_PC_BP,
     input [31:0] Alt_PC_BP,
@@ -67,7 +68,8 @@ module MEM(
     output [31:0] WriteData1_async,
 `endif
     output reg [31:0] Instr_OUT,
-    output reg [31:0] Instr_PC_OUT
+    output reg [31:0] Instr_PC_OUT,
+    output reg [1:0] Branch_predictions_OUT
 );
 
     reg [31:0]  Alt_PC2;
@@ -309,6 +311,7 @@ assign MemoryData1 = MemWriteData1_IN;
              Instr_OUT <= 32'b0;
              Instr_PC_OUT <= 32'b0;
              Flush <= 0;
+             Branch_predictions_OUT <= 0;
          end else if(CLK) begin
              Instr1_OUT <= Instr1_IN;
              Instr1_PC_OUT <= Instr1_PC_IN;
@@ -317,6 +320,7 @@ assign MemoryData1 = MemWriteData1_IN;
              WriteData1_OUT <= WriteData1;
              Instr_OUT <= Instr1_IN;
              Instr_PC_OUT <= Instr1_PC_IN;
+             Branch_predictions_OUT <= Branch_predictions_IN;
              $display("MEM: Request_Alt_PC=%X",Request_Alt_PC);
              if(Request_Alt_PC_Predicted != Request_Alt_PC) begin
                  if(comment1) begin

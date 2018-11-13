@@ -41,6 +41,7 @@ module EXE(
     input [31:0] Alt_PC,
     input Request_Alt_PC,
     input Branch_prediction_IN,
+    input [1:0] Branch_predictions_IN,
     //Destination register
     input [4:0] WriteRegister1_IN,
     //Data in MemWrite1 register
@@ -75,7 +76,8 @@ module EXE(
     output reg MemRead1_OUT,
     //We need to write to MEM (passed to MEM)
     output reg MemWrite1_OUT,
-    output reg Branch_prediction_OUT
+    output reg Branch_prediction_OUT,
+    output reg [1:0] Branch_predictions_OUT
 
 `ifdef HAS_FORWARDING
     ,
@@ -190,6 +192,7 @@ always @(posedge CLK or negedge RESET) begin
                 Request_Alt_PC1 <=0;
                 Alt_PC1 <=0;
                 Branch_prediction_OUT <= 0;
+                Branch_predictions_OUT <= 0;
 		$display("EXE:RESET");
 	end else if(CLK) begin
        HI <= new_HI;
@@ -206,6 +209,7 @@ always @(posedge CLK or negedge RESET) begin
             Request_Alt_PC1 <= Request_Alt_PC;
             Alt_PC1 <= Alt_PC;
             Branch_prediction_OUT <= Branch_prediction_IN;
+            Branch_predictions_OUT <= Branch_predictions_IN;
 			if(comment1) begin
                 $display("EXE:Instr1=%x,Instr1_PC=%x,ALU_result1=%x; Write?%d to %d",Instr1_IN,Instr1_PC_IN,ALU_result1, RegWrite1_IN, WriteRegister1_IN);
                 //$display("EXE:ALU_Control1=%x; MemRead1=%d; MemWrite1=%d (Data:%x)",ALU_Control1_IN, MemRead1_IN, MemWrite1_IN, MemWriteData1);
