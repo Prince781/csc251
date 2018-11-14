@@ -135,7 +135,7 @@ always @(posedge CLK or negedge RESET) begin
         Branch_predictions_OUT = 0;
         $display("Hybrid [RESET]");
     end else if (CLK) begin
-        if (ras_valid) begin
+        if (ras_valid && ras_addr != 0) begin
             Taken = ras_valid;
             Taken_addr = ras_addr;
             Branch_predictions_OUT = 0;     // don't train the metapredictor next time
