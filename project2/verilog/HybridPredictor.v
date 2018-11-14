@@ -87,8 +87,8 @@ MetaPredictor MetaPredictor(
     .Branch_resolved(last_branch_resolved),
     .Branch_local_prediction(Branch_local_prediction),
     .Branch_global_prediction(Branch_global_prediction),
-    .Branch_addr_IN(last_branch_addr),
-    .Instr_addr_input(last_branch_addr_not_jump),
+    .Branch_addr_IN(last_branch_addr_not_jump),
+    .Instr_addr_input(Instr_addr_input),
     .Instr_input(Instr_input),
     .Use_global(meta_use_global)
 );
