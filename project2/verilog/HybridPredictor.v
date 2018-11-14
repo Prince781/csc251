@@ -119,11 +119,12 @@ LocalPredictor LocalPredictor(
 
 RAS RAS(
     .CLK(CLK),
+    .FLUSH(FLUSH),
+    .RESET(RESET),
     .Instr_input(Instr_input),
     .Instr_addr_input(Instr_addr_input),
     .Last_Instr_input(Branch_instr),
     .Last_Instr_addr_input(Branch_addr),
-    .Resolved_addr_IN(Branch_resolved_addr),
     .Valid_OUT(ras_valid),
     .Addr_OUT(ras_addr)
 );
