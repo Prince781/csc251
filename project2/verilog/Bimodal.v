@@ -91,9 +91,9 @@ always @(posedge CLK or negedge RESET) begin
         Taken_addr = 0;
         $display("Bimodal [RESET]");
     end else begin
-        Taken = (pht_taken | branch2) & btb_valid;
+        Taken = (pht_taken | jump2) & btb_valid;
         Taken_addr = btb_addr;
-        $display("Bimodal: instr@%x=%x Taken? %x => %x", Instr_addr_input, Instr_input, (pht_taken | branch2) & btb_valid, btb_addr);
+        $display("Bimodal: instr@%x=%x Taken? %x => %x", Instr_addr_input, Instr_input, (pht_taken | jump2) & btb_valid, btb_addr);
     end
     if (is_branch_last) begin
         $display("Bimodal: last branch@%x=%x actually %s", Branch_addr, Branch_instr, Branch_resolved ? "taken" : "not taken");
