@@ -16,6 +16,7 @@ module Bimodal(
 
 wire last_branch_resolved;
 wire [31:0] last_branch_addr;
+wire [31:0] last_branch_addr_for_pht;
 wire [31:0] last_branch_resolved_addr;
 wire branch1;
 wire jump1;
@@ -38,6 +39,7 @@ Decoder #(.TAG("BTB-BranchInstr")) IsBranch1(
     .Branch(branch1)
 );
 
+/* we want to keep a BTB entry for both jumps and branches */
 assign is_branch_last = jump1 | branch1;
 
 assign last_branch_resolved = (is_branch_last) ? Branch_resolved : 1'b0;
@@ -69,12 +71,15 @@ BTB BTB(
     .Valid_OUT(btb_valid)
 );
 
+/* PHT need not care about jumps, as they are always taken */
+assign last_branch_addr_for_pht = (branch2) ? last_branch_addr : 32'd0;
+
 PHT PHT(
     .CLK(CLK),
     .RESET(RESET),
     .FLUSH(FLUSH),
     .Resolution_IN(last_branch_resolved),
-    .Branch_addr_IN(last_branch_addr),
+    .Branch_addr_IN(last_branch_addr_for_pht),
     .Instr_Addr_IN(Instr_addr_input),
     .Is_Branch_IN(is_branch),
     .Taken_OUT(pht_taken)
@@ -86,9 +91,9 @@ always @(posedge CLK or negedge RESET) begin
         Taken_addr = 0;
         $display("Bimodal [RESET]");
     end else begin
-        Taken = pht_taken & btb_valid;
+        Taken = (pht_taken | branch2) & btb_valid;
         Taken_addr = btb_addr;
-        $display("Bimodal: instr@%x=%x Taken? %x => %x", Instr_addr_input, Instr_input, pht_taken & btb_valid, btb_addr);
+        $display("Bimodal: instr@%x=%x Taken? %x => %x", Instr_addr_input, Instr_input, (pht_taken | branch2) & btb_valid, btb_addr);
     end
     if (is_branch_last) begin
         $display("Bimodal: last branch@%x=%x actually %s", Branch_addr, Branch_instr, Branch_resolved ? "taken" : "not taken");

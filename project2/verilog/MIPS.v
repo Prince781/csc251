@@ -518,7 +518,7 @@ module MIPS (
                 .Request_Alt_PC(Request_Alt_PC_IDEXE),
                 .Alt_PC(Alt_PC_IDEXE),
                 .Branch_prediction_IN(BP_taken_IDEXE),
-                .Branch_prediction_addr_IN(BP_addr_EXEMEM),
+                .Branch_prediction_addr_IN(BP_addr_IDEXE),
 `ifdef BP_HYBRID
                 .Branch_predictions_IN(BP_global_local_IDEXE),
 `endif
