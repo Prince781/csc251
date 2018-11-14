@@ -113,15 +113,15 @@ LocalPredictor LocalPredictor(
 
 always @(posedge CLK or negedge RESET) begin
     if (!RESET || FLUSH) begin
-        Taken <= 0;
-        Taken_addr <= 0;
-        Branch_predictions_OUT <= 0;
+        Taken = 0;
+        Taken_addr = 0;
+        Branch_predictions_OUT = 0;
         $display("Hybrid [RESET]");
     end else if (CLK) begin
-        Taken <= (meta_use_global ? global_taken : local_taken) & btb_valid;
-        Taken_addr <= btb_addr;
-        Branch_predictions_OUT <= {global_taken,local_taken};
-        $display("Hybrid: instr@%x=%x Taken? %x => %x", Instr_addr_input, Instr_input, (meta_use_global ? global_taken : local_taken) & btb_valid, btb_addr);
+        Taken = (meta_use_global ? global_taken : local_taken) & btb_valid;
+        Taken_addr = btb_addr;
+        Branch_predictions_OUT = {global_taken,local_taken};
+        $display("Hybrid: instr@%x=%x Taken? %x (%x)=> %x", Instr_addr_input, Instr_input, (meta_use_global ? global_taken : local_taken) , btb_valid, btb_addr);
     end
     if (is_branch_last) begin
         $display("Hybrid: last branch@%x=%x actually %s", Branch_addr, Branch_instr, Branch_resolved ? "taken" : "not taken");

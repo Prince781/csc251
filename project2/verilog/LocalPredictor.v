@@ -33,7 +33,7 @@ module LocalPredictor(
             default:Taken<=1'b0; // default, don't branch
         endcase
         // Update predictor
-        $display("Hybrid: Local Predictor: %x", Instr_addr_input);
+        $display("Hybrid: Local Predictor: %x, Taken? %x", Instr_addr_input, Taken);
         if (Branch_addr_IN != 0) begin
             if (Branch_resolved) begin
                 case(pht[bht[Branch_addr_IN[11:2]]])

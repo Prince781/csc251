@@ -33,7 +33,7 @@ module GlobalPredictor(
             default:Taken<=1'b0; // default, don't branch
         endcase
         // Update predictor
-        $display("Hybrid: Global Predictor: %x", Instr_addr_input);
+        $display("Hybrid: Global Predictor: %x Taken? %x", Instr_addr_input, Taken);
         if (Branch_addr_IN != 0) begin
             if (Branch_resolved) begin
                 case(pht[ghr])
@@ -60,7 +60,7 @@ module GlobalPredictor(
                 endcase
             end
             assign ghr = {ghr[10:0], Branch_resolved};
-            $display("Hybrid: Global Predictor: updating history to %x", ghr);
+            $display("Hybrid: Global Predictor: updating history to %b", ghr);
         end
     end
 endmodule

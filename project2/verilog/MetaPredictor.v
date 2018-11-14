@@ -49,7 +49,7 @@ module MetaPredictor(
                     default: fsm[Branch_addr_IN[11:2]]--;
                 endcase
                 $display("Hybrid: Meta Predictor: saturating down to local for %x", Branch_addr_IN);
-            end 
+            end
             else begin
                 $display("Hybrid: Meta Predictor: no change for %x", Branch_addr_IN);
             end
