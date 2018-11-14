@@ -20,8 +20,8 @@
 
 // mutally exclusive:
 // `define BP_NOTTAKEN // use always-not-taken branch predictor
-`define BP_BIMODAL  // bimodal predictor
-// `define BP_HYBRID   // hybrid branch predictor
+// `define BP_BIMODAL  // bimodal predictor
+`define BP_HYBRID   // hybrid branch predictor
 
 //Added before project 4 starts
 //`define OUT_OF_ORDER

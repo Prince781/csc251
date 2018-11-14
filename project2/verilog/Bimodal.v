@@ -72,7 +72,7 @@ BTB BTB(
 );
 
 /* PHT need not care about jumps, as they are always taken */
-assign last_branch_addr_for_pht = (branch2) ? last_branch_addr : 32'd0;
+assign last_branch_addr_for_pht = (branch1) ? last_branch_addr : 32'd0;
 
 PHT PHT(
     .CLK(CLK),

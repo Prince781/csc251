@@ -21,6 +21,7 @@ wire Branch_global_prediction;
 
 wire last_branch_resolved;
 wire [31:0] last_branch_addr;
+wire [31:0] last_branch_addr_not_jump;
 wire [31:0] last_branch_resolved_addr;
 wire branch1;
 wire jump1;
@@ -52,6 +53,7 @@ assign is_branch_last = jump1 | branch1;
 
 assign last_branch_resolved = (is_branch_last) ? Branch_resolved : 1'b0;
 assign last_branch_addr = (is_branch_last) ? Branch_addr : 32'd0;
+assign last_branch_addr_not_jump = (branch1) ? last_branch_addr : 32'd0;
 assign last_branch_resolved_addr = (is_branch_last) ? Branch_resolved_addr : 32'd0;
 
 Decoder #(.TAG("BTB-CurInstr")) IsBranch2(
@@ -86,7 +88,7 @@ MetaPredictor MetaPredictor(
     .Branch_local_prediction(Branch_local_prediction),
     .Branch_global_prediction(Branch_global_prediction),
     .Branch_addr_IN(last_branch_addr),
-    .Instr_addr_input(Instr_addr_input),
+    .Instr_addr_input(last_branch_addr_not_jump),
     .Instr_input(Instr_input),
     .Use_global(meta_use_global)
 );
@@ -97,7 +99,7 @@ GlobalPredictor GlobalPredictor(
     .Instr_input(Instr_input),
     .Instr_addr_input(Instr_addr_input),
     .Branch_resolved(last_branch_resolved),
-    .Branch_addr_IN(last_branch_addr),
+    .Branch_addr_IN(last_branch_addr_not_jump),
     .Taken(global_taken)
 );
 
@@ -107,7 +109,7 @@ LocalPredictor LocalPredictor(
     .Instr_input(Instr_input),
     .Instr_addr_input(Instr_addr_input),
     .Branch_resolved(last_branch_resolved),
-    .Branch_addr_IN(last_branch_addr),
+    .Branch_addr_IN(last_branch_addr_not_jump),
     .Taken(local_taken)
 );
 
@@ -118,10 +120,10 @@ always @(posedge CLK or negedge RESET) begin
         Branch_predictions_OUT = 0;
         $display("Hybrid [RESET]");
     end else if (CLK) begin
-        Taken = (meta_use_global ? global_taken : local_taken) & btb_valid;
+        Taken = ((meta_use_global ? global_taken : local_taken) | branch2) & btb_valid;
         Taken_addr = btb_addr;
         Branch_predictions_OUT = {global_taken,local_taken};
-        $display("Hybrid: instr@%x=%x Taken? %x (%x)=> %x", Instr_addr_input, Instr_input, (meta_use_global ? global_taken : local_taken) , btb_valid, btb_addr);
+        $display("Hybrid: instr@%x=%x Taken? %x (%x)=> %x", Instr_addr_input, Instr_input, ((meta_use_global ? global_taken : local_taken) | branch2), btb_valid, btb_addr);
     end
     if (is_branch_last) begin
         $display("Hybrid: last branch@%x=%x actually %s", Branch_addr, Branch_instr, Branch_resolved ? "taken" : "not taken");
