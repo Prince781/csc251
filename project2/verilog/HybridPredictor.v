@@ -68,6 +68,8 @@ assign is_branch = jump2 | branch2;
 
 BTB BTB(
     .CLK(CLK),
+    .RESET(RESET),
+    .FLUSH(FLUSH),
     .Resolution_IN(last_branch_resolved),
     .Branch_addr_IN(last_branch_addr),
     .Branch_resolved_addr_IN(last_branch_resolved_addr),
