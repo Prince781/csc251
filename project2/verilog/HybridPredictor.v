@@ -33,8 +33,12 @@ wire is_branch;
 wire meta_use_global;
 wire global_taken;
 wire local_taken;
+
 wire [31:0] btb_addr;
 wire btb_valid;
+
+wire [31:0] ras_addr;
+wire ras_valid;
 
 assign Branch_global_prediction = Branch_predictions[1];
 assign Branch_local_prediction = Branch_predictions[0];
@@ -113,6 +117,17 @@ LocalPredictor LocalPredictor(
     .Taken(local_taken)
 );
 
+RAS RAS(
+    .CLK(CLK),
+    .Instr_input(Instr_input),
+    .Instr_addr_input(Instr_addr_input),
+    .Last_Instr_input(Branch_instr),
+    .Last_Instr_addr_input(Branch_addr),
+    .Resolved_addr_IN(Branch_resolved_addr),
+    .Valid_OUT(ras_valid),
+    .Addr_OUT(ras_addr)
+);
+
 always @(posedge CLK or negedge RESET) begin
     if (!RESET || FLUSH) begin
         Taken = 0;
@@ -120,10 +135,17 @@ always @(posedge CLK or negedge RESET) begin
         Branch_predictions_OUT = 0;
         $display("Hybrid [RESET]");
     end else if (CLK) begin
-        Taken = ((meta_use_global ? global_taken : local_taken) | branch2) & btb_valid;
-        Taken_addr = btb_addr;
-        Branch_predictions_OUT = {global_taken,local_taken};
-        $display("Hybrid: instr@%x=%x Taken? %x (%x)=> %x", Instr_addr_input, Instr_input, ((meta_use_global ? global_taken : local_taken) | branch2), btb_valid, btb_addr);
+        if (ras_valid) begin
+            Taken = ras_valid;
+            Taken_addr = ras_addr;
+            Branch_predictions_OUT = 0;     // don't train the metapredictor next time
+            $display("Hybrid: instr@%x=%x Taken? 1 => %x (using RAS)", Instr_addr_input, Instr_input, ras_addr);
+        end else begin
+            Taken = ((meta_use_global ? global_taken : local_taken) | branch2) & btb_valid;
+            Taken_addr = btb_addr;
+            Branch_predictions_OUT = {global_taken,local_taken};
+            $display("Hybrid: instr@%x=%x Taken? %x (%x)=> %x", Instr_addr_input, Instr_input, ((meta_use_global ? global_taken : local_taken) | branch2), btb_valid, btb_addr);
+        end
     end
     if (is_branch_last) begin
         $display("Hybrid: last branch@%x=%x actually %s", Branch_addr, Branch_instr, Branch_resolved ? "taken" : "not taken");
