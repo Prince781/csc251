@@ -60,7 +60,7 @@ module LocalPredictor(
                 endcase
             end
             assign bht[Branch_addr_IN[11:2]] = {bht[Branch_addr_IN[11:2]][8:0],Branch_resolved};
-            $display("Hybrid: Local Predictor: updating history[%x] to %x", Branch_addr_IN, bht[Branch_addr_IN[11:2]]);
+            $display("Hybrid: Local Predictor: updating history[%x] to %b", Branch_addr_IN, bht[Branch_addr_IN[11:2]]);
         end
     end
 endmodule
