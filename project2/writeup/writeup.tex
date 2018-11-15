@@ -1,0 +1,81 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[htt]{hyphenat}
+
+\title{CSC 2/451 - Project 2}
+\author{
+Yufei Du \\
+\texttt{<ydu14@ur.rochester.edu>}
+\and
+Princeton Ferro \\
+\texttt{<pferro@u.rochester.edu>}
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Configuration}
+We've implemented three different branch predictors, which can be toggled by defining one of \texttt{BP\_NOTTAKEN}, \texttt{BP\_BIMODAL}, or \texttt{BP\_HYBRID} (see \texttt{config.v}).
+
+\section{Components}
+\subsection{Pipeline}
+The pipeline was modified in a few ways. There is a direct connection from the branch predictor to MEM, in order to request new instructions. There are additional wires between each of the stages that allows the prediction to "move up" the pipeline along with the instruction, so that the MEM stage can compare the branch prediction with the actual resolution of the branch.
+
+\subsection{Always-Not-Taken Predictor}
+A simple branch predictor that predicts not taken for every branch it sees. See \texttt{AlwaysNotTaken.v}
+
+\subsection{Bimodal Predictor}
+The bimodal predictor (see \texttt{Bimodal.v}) uses a 1024-entry pattern history table with 2-bit saturating up-down counters (see \texttt{PHT.v}), and a 1024-entry 2-way set-associative branch target buffer with LRU replacement (see \texttt{BTB.v}).
+
+\subsection{Hybrid Predictor}
+We also implemented a hybrid branch predictor (see \texttt{HybridPredictor.v}), with a global branch predictor with 12-bit global history register and 4096-entry PHT (see \texttt{GlobalPredictor.v}), a local branch predictor with 1024-entry BHT with 10-bit history, and a 1024-entry PHT (see \texttt{LocalPredictor.v}), a meta predictor with 1024 entries, each being a 2-bit FSM (see \texttt{MetaPredictor.v}), and a 32-entry return address stack (see \texttt{RAS.v}).
+
+Please note, \textbf{we could not get the hybrid predictor to work with \texttt{file} and \texttt{noio} using the return address stack}.
+
+\section{Evaluation}
+\subsection{Cycles and IPC}
+\begin{tabular}{| c | c | c | c | c | c | c |}
+  \hline
+  program & always-not-taken & & bimodal & & hybrid & \\
+  \hline
+  & cycles & IPC & cycles & IPC & cycles & IPC\\
+  \hline
+  class & 194543 & 0.998057 & 160143 & 0.998289 & 163820 & 0.998205\\
+  fact12 & 221581 & 0.998023 & 181744 & 0.998107 & 187105 & 0.998108\\
+  fib18 & 590828 & 0.994987 & 498612 & 0.998696 & 500526 & 0.999443\\
+  file & 189568 & 0.997922 & 156632 & 0.998168 & 173027* & 0.998226*\\
+  hanoi & 397919 & 0.998442 & 323498 & 0.99719 & 336701 & 0.997823\\
+  hello & 191829 & 0.998029 & 157681 & 0.998275 & 161590 & 0.998267\\
+  ical & 463299 & 0.999184 & 388995 & 0.999296 & 397413 & 0.999255\\
+  matrix & 272485 & 0.998194 & 224073 & 0.998019 & 230782 & 0.997976 \\
+  noio & 4031 & 0.988588 & 3862 & 0.988866 & 3647 & 0.988484\\
+  sort & 209858 & 0.998118 & 172888 & 0.998247 & 190575* & 0.998352* \\
+  \hline
+\end{tabular}
+
+\textit{* without return address stack}
+
+\subsection{Mispredictions}
+\begin{tabular}{| c | c | c | c |}
+  \hline
+  program & always-not-taken & bimodal & hybrid \\
+  \hline
+  class & 10811 & 6496 & 6960 \\
+  fact12 & 12294 & 7298 & 7972 \\
+  fib18 & 31668 & 19944 & 20350 \\
+  file & 10475 & 6346 & 8393*\\
+  hanoi & 21785 & 12419 & 14078\\
+  hello & 10673 & 6391 & 6881\\
+  ical & 27417 & 18115 & 18974\\
+  matrix & 15008 & 8932 & 9772\\
+  noio & 212 & 190 & 164\\
+  sort & 11651 & 7012 & 9224* \\
+  \hline
+\end{tabular}
+
+\textit{* without return address stack}
+
+\end{document}
