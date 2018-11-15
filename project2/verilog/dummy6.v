@@ -49,10 +49,10 @@ always @(posedge CLK or negedge RESET) begin
                 Branch_prediction_OUT <= Branch_prediction_IN;
                 Branch_prediction_addr_OUT <= Branch_prediction_addr_IN;
                 Branch_predictions_OUT <= Branch_predictions_IN;
-                $display("Dummy6:Instr@%x=%x;Next@%x",Instr_PC_IF,Instr1_IF,Instr_PC_Plus4_IF);
+                $display("Dummy6:Instr@%x=%x;Next@%x (Taken? %b => %x)",Instr_PC_IF,Instr1_IF,Instr_PC_Plus4_IF, Branch_prediction_IN, Branch_prediction_addr_IN);
         end else begin
             Instr_pc_IF_stall <= Instr_PC_IF;
-            $display("Dummy6 stalling:Instr@%x=%x;Next@%x",Instr_PC_IF,Instr1_IF,Instr_PC_Plus4_IF);
+            $display("Dummy6 stalling:Instr@%x=%x;Next@%x (Taken? %b => %x)",Instr_PC_IF,Instr1_IF,Instr_PC_Plus4_IF, Branch_prediction_IN, Branch_prediction_addr_IN);
         end
     end
 end

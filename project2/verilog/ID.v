@@ -315,9 +315,15 @@ RegFile RegFile (
          end else begin
              Alt_PC <= Alt_PC1;
              Request_Alt_PC <= Request_Alt_PC1;
-             Branch_prediction_OUT <= Branch_prediction_IN;
-             Branch_prediction_addr_OUT <= Branch_prediction_addr_IN;
-             Branch_predictions_OUT <= Branch_predictions_IN;
+             if (!WANT_FREEZE) begin
+                 Branch_prediction_OUT <= Branch_prediction_IN;
+                 Branch_prediction_addr_OUT <= Branch_prediction_addr_IN;
+                 Branch_predictions_OUT <= Branch_predictions_IN;
+             end else begin
+                 Branch_prediction_OUT <= 0;
+                 Branch_prediction_addr_OUT <= 0;
+                 Branch_predictions_OUT <= 0;
+             end
              $display("ID:evaluation SBC=%d; syscal1=%d",syscall_bubble_counter,syscal1);
              case (syscall_bubble_counter)
                  5,4,3: begin
@@ -386,7 +392,7 @@ RegFile RegFile (
              $display("IDWB:Reg[%d]=%x",WriteRegister_IN,WriteData_IN);
          end*/
             if(comment1) begin
-                $display("ID1:Instr=%x,Instr_PC=%x,Req_Alt_PC=%d:Alt_PC=%x;SYS=%d(%d)",Instr1_IN,Instr_PC_IN,Request_Alt_PC1,Alt_PC1,syscal1,syscall_bubble_counter);
+                $display("ID1:Instr=%x,Instr_PC=%x,Req_Alt_PC=%d:Alt_PC=%x;SYS=%d(%d) (Taken? %b => %x)",Instr1_IN,Instr_PC_IN,Request_Alt_PC1,Alt_PC1,syscal1,syscall_bubble_counter, Branch_prediction_IN, Branch_prediction_addr_IN);
                 //$display("ID1:A:Reg[%d]=%x; B:Reg[%d]=%x; Write?%d to %d",RegA1, OpA1, RegB1, OpB1, (WriteRegister1!=5'd0)?RegWrite1:1'd0, WriteRegister1);
                 //$display("ID1:ALU_Control=%x; MemRead=%d; MemWrite=%d (%x); ShiftAmount=%d",ALU_control1, MemRead1, MemWrite1, MemWriteData1, shiftAmount1);
             end

@@ -188,6 +188,8 @@ module MIPS (
        $display("MIPS:Alt_PC_MEMIF=%X",Alt_PC_MEMIF);
        $display("MIPS:Branch_resolved_MEMBP=%X",Branch_resolved_MEMBP);
        $display("MIPS:Branch_resolved_addr_MEMBP=%X",Branch_resolved_addr_MEMBP);
+       $display("MIPS:Request_Alt_PC_BPIF=%X",Request_Alt_PC_BPIF);
+       $display("MIPS:Alt_PC_BPIF=%X",Alt_PC_BPIF);
     end
     IF IF(
         .CLK(CLK),
@@ -232,6 +234,7 @@ module MIPS (
         .CLK(CLK),
         .RESET(RESET),
         .FLUSH(FLUSH),
+        .STALL(STALL_IDIF),
         .Instr_input(Instr1_IFID),
         .Instr_addr_input(Instr_PC_IFID),
         .Branch_instr(Instr_MEMBP),

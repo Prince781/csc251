@@ -4,6 +4,7 @@ module HybridPredictor(
     input CLK,
     input RESET,
     input FLUSH,
+    input STALL,
     input [31:0] Instr_input,           /* the current instruction */
     input [31:0] Instr_addr_input,      /* the current PC */
     input [31:0] Branch_instr,       /* the current instruction in MEM */
@@ -136,16 +137,20 @@ always @(posedge CLK or negedge RESET) begin
         Branch_predictions_OUT = 0;
         $display("Hybrid [RESET]");
     end else if (CLK) begin
-        if (ras_valid && ras_addr != 0) begin
-            Taken = ras_valid;
-            Taken_addr = ras_addr;
-            Branch_predictions_OUT = 0;     // don't train the metapredictor next time
-            $display("Hybrid: instr@%x=%x Taken? 1 => %x (using RAS)", Instr_addr_input, Instr_input, ras_addr);
+        if (!STALL) begin
+            if (ras_valid && ras_addr != 0) begin
+                Taken = ras_valid;
+                Taken_addr = ras_addr;
+                Branch_predictions_OUT = 0;     // don't train the metapredictor next time
+                $display("Hybrid: instr@%x=%x Taken? 1 => %x (using RAS)", Instr_addr_input, Instr_input, ras_addr);
+            end else begin
+                Taken = ((meta_use_global ? global_taken : local_taken) | jump2) & btb_valid;
+                Taken_addr = btb_addr;
+                Branch_predictions_OUT = {global_taken,local_taken};
+                $display("Hybrid: instr@%x=%x Taken? %x (%x)=> %x", Instr_addr_input, Instr_input, ((meta_use_global ? global_taken : local_taken) | jump2), btb_valid, btb_addr);
+            end
         end else begin
-            Taken = ((meta_use_global ? global_taken : local_taken) | jump2) & btb_valid;
-            Taken_addr = btb_addr;
-            Branch_predictions_OUT = {global_taken,local_taken};
-            $display("Hybrid: instr@%x=%x Taken? %x (%x)=> %x", Instr_addr_input, Instr_input, ((meta_use_global ? global_taken : local_taken) | jump2), btb_valid, btb_addr);
+            $display("Hybrid: instr@%x=%x stalling", Instr_addr_input, Instr_input);
         end
     end
     if (is_branch_last) begin

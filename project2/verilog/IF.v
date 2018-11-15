@@ -70,8 +70,12 @@ always @(posedge CLK or negedge RESET) begin
                 $display("FETCH:ReqAlt[%d]=%x",Request_Alt_PC,Alt_PC);
 `endif
         end else begin
-            if (FLUSH || Request_Alt_PC_BP) begin
+            if (FLUSH) begin
                 $display("FETCH [FLUSH]: Alt_PC = %x", Alt_PC);
+            end else if (Request_Alt_PC_BP) begin
+                $display("FETCH [BP-FLUSH]: Alt_PC = %x", Alt_PC);
+            end
+            if (FLUSH || Request_Alt_PC_BP) begin
                 Instr_PC_Plus4 <= Alt_PC;
                 Instr1_OUT <= 0;
             end
