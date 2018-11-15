@@ -115,6 +115,8 @@ module MEM(
 
     reg [31:0]WriteData1;
 
+    reg [31:0] Num_BPMiss;
+
     wire comment1;
     assign comment1 = 1;
 
@@ -351,6 +353,7 @@ assign MemoryData1 = MemWriteData1_IN;
                      Branch_resolved_MEMBP <= Request_Alt_PC;
                      Branch_resolved_addr_MEMBP <= Alt_PC;
                  end
+                 Num_BPMiss = Num_BPMiss + 1'd1;
                  Flush <= 1;
              end
              else if (Alt_PC_Predicted != Alt_PC) begin
@@ -364,6 +367,7 @@ assign MemoryData1 = MemWriteData1_IN;
                      Branch_resolved_MEMBP <= 1'b1;
                      Branch_resolved_addr_MEMBP <= Alt_PC;
                      Flush <= 1;
+                     Num_BPMiss = Num_BPMiss + 1'd1;
                  end else begin
                      Request_Alt_PC1 <= 1'b0;
                      Branch_resolved_MEMBP <= 1'b0;
@@ -371,7 +375,7 @@ assign MemoryData1 = MemWriteData1_IN;
                  end
              end
              else begin
-                 /* our instruction from EXE is not a branch; now we see 
+                 /* our instruction from EXE is not a branch; now we see
                   * if BP predicted a branch */
                  if (Request_Alt_PC_BP) begin
                      Request_Alt_PC1 <= Request_Alt_PC_BP;
@@ -387,6 +391,7 @@ assign MemoryData1 = MemWriteData1_IN;
              if(comment1) begin
                  $display("MEM:Instr1_OUT=%x,Instr1_PC_OUT=%x,WriteData1=%x; Write?%d to %d",Instr1_IN,Instr1_PC_IN,WriteData1, RegWrite1_IN, WriteRegister1_IN);
                  $display("MEM:data_address_2DM=%x; data_write_2DM(%d)=%x(%d); data_read_fDM(%d)=%x",data_address_2DM,MemWrite_2DM,data_write_2DM,data_write_size_2DM,MemRead_2DM,data_read_fDM);
+                 $display("MEM:Current number of branch misprediction: %d", Num_BPMiss);
              end
          end
      end
