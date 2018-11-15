@@ -67,25 +67,25 @@ always @(posedge CLK or negedge RESET) begin
     end
 
     if (FLUSH || !RESET) begin
-        Addr_OUT = 0;
-        Valid_OUT = 1'b0;
+        Addr_OUT <= 0;
+        Valid_OUT <= 1'b0;
         $display("RAS: [FLUSH]");
     end
     // don't manipulate the stack for speculated instructions
     else if (cur_is_jump & !cur_writes_reg) begin
         if (pos != start) begin
-            Valid_OUT = 1;
-            Addr_OUT = stack[(pos - 1) % 6'd32];
+            Valid_OUT <= 1;
+            Addr_OUT <= stack[(pos - 1) % 6'd32];
             $display("RAS: peek() from stack[%d]: predicting %x => %x", pos, Instr_addr_input, stack[(pos - 1) % 6'd32]);
         end else begin
-            Valid_OUT = 0;
-            Addr_OUT = 0;
+            Valid_OUT <= 0;
+            Addr_OUT <= 0;
             $display("RAS: stack empty");
         end
     end
     else begin
-        Valid_OUT = 1'b0;
-        Addr_OUT = 0;
+        Valid_OUT <= 1'b0;
+        Addr_OUT <= 0;
         $display("RAS: current instruction is not JR");
     end
 end
