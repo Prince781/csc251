@@ -21,6 +21,10 @@
 module EXE(
     input CLK,
     input RESET,
+`ifdef USE_DCACHE
+    //Pipeline is stalling (ask MEM for details)
+	 input STALL_fMEM,
+`endif
 	 //Current instruction [debug]
     input [31:0] Instr1_IN,
     //Current instruction's PC [debug]
@@ -185,6 +189,11 @@ always @(posedge CLK or negedge RESET) begin
 	end else if(CLK) begin
        HI <= new_HI;
        LO <= new_LO;
+`ifdef USE_DCACHE
+		if(STALL_fMEM) begin
+            $display("EXE[STALL_fMEM]:Instr1_OUT=%x,Instr1_PC_OUT=%x", Instr1_OUT, Instr1_PC_OUT);
+		end else begin
+`endif
             Instr1_OUT <= Instr1_IN;
             Instr1_PC_OUT <= Instr1_PC_IN;
             ALU_result1_OUT <= ALU_result1;
@@ -199,6 +208,9 @@ always @(posedge CLK or negedge RESET) begin
                 //$display("EXE:ALU_Control1=%x; MemRead1=%d; MemWrite1=%d (Data:%x)",ALU_Control1_IN, MemRead1_IN, MemWrite1_IN, MemWriteData1);
                 //$display("EXE:OpA1=%x; OpB1=%x; HI=%x; LO=%x", A1, B1, new_HI,new_LO);
 			end
+`ifdef USE_DCACHE
+		end
+`endif
 	end
 end
 

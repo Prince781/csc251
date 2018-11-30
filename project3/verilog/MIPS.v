@@ -63,6 +63,9 @@ module MIPS (
     wire [31:0] Instr1_IFID;
     wire [31:0] Instr_PC_IFID;
     wire [31:0] Instr_PC_Plus4_IFID;
+`ifdef USE_ICACHE
+    wire        Instr1_Available_IFID;
+`endif
     wire        STALL_IDIF;
     wire        Request_Alt_PC_IDIF;
     wire [31:0] Alt_PC_IDIF;
@@ -75,7 +78,52 @@ module MIPS (
     //We could use Instr_address_2IM, but this way sim_main doesn't have to 
     //worry about whether or not a cache is present.
     wire [31:0] Instr1_fIC;
+`ifdef USE_ICACHE
+    wire        Instr1_fIC_IsValid;
+`endif
     wire [31:0] Instr2_fIC;
+`ifdef USE_ICACHE
+    wire        Instr2_fIC_IsValid;
+    Cache #(
+    .CACHENAME("I$1")
+    ) ICache(
+        .CLK(CLK),
+        .RESET(RESET),
+        .Read1(1'b1),
+        .Write1(1'b0),
+        .Flush1(1'b0),
+        .Address1(Instr_address_2IC),
+        .WriteData1(32'd0),
+        .WriteSize1(2'd0),
+        .ReadData1(Instr1_fIC),
+        .OperationAccepted1(Instr1_fIC_IsValid),
+`ifdef SUPERSCALAR
+        .ReadData2(Instr2_fIC),
+        .DataValid2(Instr2_fIC_IsValid),
+`endif
+        .read_2DM(iBlkRead),
+/* verilator lint_off PINCONNECTEMPTY */
+        .write_2DM(),
+/* verilator lint_on PINCONNECTEMPTY */
+        .address_2DM(Instr_address_2IM),
+/* verilator lint_off PINCONNECTEMPTY */
+        .data_2DM(),
+/* verilator lint_on PINCONNECTEMPTY */
+        .data_fDM(block_read_fIM),
+        .dm_operation_accepted(block_read_fIM_valid)
+    );
+    /*verilator lint_off UNUSED*/
+    wire [31:0] unused_i1;
+    wire [31:0] unused_i2;
+    /*verilator lint_on UNUSED*/
+    assign unused_i1 = Instr1_fIM;
+    assign unused_i2 = Instr2_fIM;
+`ifdef SUPERSCALAR
+`else
+    assign Instr2_fIC = 32'd0;
+    assign Instr2_fIC_IsValid = 1'b0;
+`endif
+`else
     assign Instr_address_2IM = Instr_address_2IC;
     assign Instr1_fIC = Instr1_fIM;
     assign Instr2_fIC = Instr2_fIM;
@@ -86,12 +134,19 @@ module MIPS (
     /*verilator lint_on UNUSED*/
     assign unused_i1 = block_read_fIM;
     assign unused_i2 = block_read_fIM_valid;
+`endif
 `ifdef SUPERSCALAR
 `else
     /*verilator lint_off UNUSED*/
     wire [31:0] unused_i3;
+`ifdef USE_ICACHE
+    wire unused_i4;
+`endif
     /*verilator lint_on UNUSED*/
     assign unused_i3 = Instr2_fIC;
+`ifdef USE_ICACHE
+    assign unused_i4 = Instr2_fIC_IsValid;
+`endif
 `endif
 
     IF IF(
@@ -100,13 +155,23 @@ module MIPS (
         .Instr1_OUT(Instr1_IFID),
         .Instr_PC_OUT(Instr_PC_IFID),
         .Instr_PC_Plus4(Instr_PC_Plus4_IFID),
+`ifdef USE_ICACHE
+        .Instr1_Available(Instr1_Available_IFID),
+`endif
         .STALL(STALL_IDIF),
         .Request_Alt_PC(Request_Alt_PC_IDIF),
         .Alt_PC(Alt_PC_IDIF),
         .Instr_address_2IM(Instr_address_2IC),
         .Instr1_fIM(Instr1_fIC)
+`ifdef USE_ICACHE
+        ,
+        .Instr1_fIM_IsValid(Instr1_fIC_IsValid)
+`endif
     );
     
+`ifdef USE_DCACHE
+	wire        STALL_fMEM;
+`endif
 
     wire [4:0]  WriteRegister1_MEMWB;
 	wire [31:0] WriteData1_MEMWB;
@@ -142,7 +207,13 @@ module MIPS (
 	ID ID(
 		.CLK(CLK),
 		.RESET(RESET),
+`ifdef USE_DCACHE
+		.STALL_fMEM(STALL_fMEM),
+`endif
 		.Instr1_IN(Instr1_IFID),
+`ifdef USE_ICACHE
+		.Instr1_Valid_IN(Instr1_Available_IFID),
+`endif
 		.Instr_PC_IN(Instr_PC_IFID),
 		.Instr_PC_Plus4_IN(Instr_PC_Plus4_IFID),
 		.WriteRegister1_IN(WriteRegister1_MEMWB),
@@ -199,6 +270,9 @@ module MIPS (
 	EXE EXE(
 		.CLK(CLK),
 		.RESET(RESET),
+`ifdef USE_DCACHE
+		.STALL_fMEM(STALL_fMEM),
+`endif
 		.Instr1_IN(Instr1_IDEXE),
 		.Instr1_PC_IN(Instr1_PC_IDEXE),
 `ifdef HAS_FORWARDING
@@ -252,6 +326,42 @@ module MIPS (
     wire        flush_2DC/*verilator public*/;
     /* verilator lint_on UNUSED */
     wire        data_valid_fDC /*verilator public*/;
+`ifdef USE_DCACHE
+    Cache #(
+    .CACHENAME("D$1")
+    ) DCache(
+        .CLK(CLK),
+        .RESET(RESET),
+        .Read1(read_2DC),
+        .Write1(write_2DC),
+        .Flush1(flush_2DC),
+        .Address1(data_address_2DC),
+        .WriteData1(data_write_2DC),
+        .WriteSize1(data_write_size_2DC),
+        .ReadData1(data_read_fDC),
+        .OperationAccepted1(data_valid_fDC),
+`ifdef SUPERSCALAR
+/* verilator lint_off PINCONNECTEMPTY */
+        .ReadData2(),
+        .DataValid2(),
+/* verilator lint_on PINCONNECTEMPTY */
+`endif
+        .read_2DM(dBlkRead),
+        .write_2DM(dBlkWrite),
+        .address_2DM(data_address_2DM),
+        .data_2DM(block_write_2DM),
+        .data_fDM(block_read_fDM),
+        .dm_operation_accepted((dBlkRead & block_read_fDM_valid) | (dBlkWrite & block_write_fDM_valid))
+    );
+    assign MemRead_2DM = 1'b0;
+    assign MemWrite_2DM = 1'b0;
+    assign data_write_2DM = 32'd0;
+    assign data_write_size_2DM = 2'b0;
+    /*verilator lint_off UNUSED*/
+    wire [31:0] unused_d1;
+    /*verilator lint_on UNUSED*/
+    assign unused_d1 = data_read_fDM;
+`else
     assign data_write_2DM = data_write_2DC;
     assign data_address_2DM = data_address_2DC;
     assign data_write_size_2DM = data_write_size_2DC;
@@ -269,6 +379,7 @@ module MIPS (
     /*verilator lint_on UNUSED*/
     assign unused_d1 = block_read_fDM_valid;
     assign unused_d2 = block_write_fDM_valid;
+`endif
      
     MEM MEM(
         .CLK(CLK),
@@ -291,6 +402,12 @@ module MIPS (
         .data_read_fDM(data_read_fDC),
         .MemRead_2DM(read_2DC),
         .MemWrite_2DM(write_2DC)
+`ifdef USE_DCACHE
+        ,
+        .MemFlush_2DM(flush_2DC),
+        .data_valid_fDM(data_valid_fDC),
+        .Mem_Needs_Stall(STALL_fMEM)
+`endif
 `ifdef HAS_FORWARDING
         ,
         .WriteData1_async(BypassData1_MEMID)
@@ -299,7 +416,17 @@ module MIPS (
      
 `ifdef HAS_FORWARDING
     assign BypassReg1_MEMID = WriteRegister1_EXEMEM;
+`ifdef USE_DCACHE
+    assign BypassValid1_MEMID = RegWrite1_EXEMEM && !STALL_fMEM;
+`else
     assign BypassValid1_MEMID = RegWrite1_EXEMEM;
 `endif
+`endif
     
+`ifdef OUT_OF_ORDER
+    RegRead RegRead(
+    );
+    RetireCommit RetireCommit(
+    );
+`endif
 endmodule

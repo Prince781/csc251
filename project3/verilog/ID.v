@@ -21,8 +21,16 @@
 module ID(
     input CLK,
     input RESET,
+`ifdef USE_DCACHE
+    //Stall has been requested by memory
+	 input STALL_fMEM,
+`endif
 	 //Instruction from Fetch
     input[31:0]Instr1_IN,
+`ifdef USE_ICACHE
+    //Instruction from Fetch is valid (set to 0 if we're waiting for some reason)
+	 input Instr1_Valid_IN,
+`endif
 	 //PC of instruction fetched
     input[31:0]Instr_PC_IN,
     //PC+4 of instruction fetched (needed for various things)
@@ -269,7 +277,11 @@ RegFile RegFile (
 	 
 	 reg FORCE_FREEZE;
 	 reg INHIBIT_FREEZE;
+`ifdef USE_DCACHE
+     assign WANT_FREEZE = STALL_fMEM || ((FORCE_FREEZE | syscal1) && !INHIBIT_FREEZE);
+`else
      assign WANT_FREEZE = ((FORCE_FREEZE | syscal1) && !INHIBIT_FREEZE);
+`endif
 	 
 always @(posedge CLK or negedge RESET) begin
 	if(!RESET) begin
@@ -294,6 +306,28 @@ always @(posedge CLK or negedge RESET) begin
 		INHIBIT_FREEZE <= 0;
 	$display("ID:RESET");
 	end else begin
+`ifdef USE_DCACHE
+		if(STALL_fMEM) begin
+			$display("ID[STALL_fMEM]:Instr1_OUT=%x,Instr1_PC_OUT=%x", Instr1_OUT, Instr1_PC_OUT);
+		end else begin
+`endif
+`ifdef USE_ICACHE
+            if (!Instr1_Valid_IN) begin
+		    $display("ID[FETCH_WAIT]");
+            Instr1_OUT <= 0;
+            OperandA1_OUT <= 0;
+            OperandB1_OUT <= 0;
+            ReadRegisterA1_OUT <= 0;
+            ReadRegisterB1_OUT <= 0;
+            WriteRegister1_OUT <= 0;
+            MemWriteData1_OUT <= 0;
+            RegWrite1_OUT <= 0;
+            ALU_Control1_OUT <= 0;
+            MemRead1_OUT <= 0;
+            MemWrite1_OUT <= 0;
+            ShiftAmount1_OUT <= 0;
+		end else begin
+`endif
             Alt_PC <= Alt_PC1;
             Request_Alt_PC <= Request_Alt_PC1;
 			//$display("ID:evaluation SBC=%d; syscal1=%d",syscall_bubble_counter,syscal1);
@@ -368,6 +402,12 @@ always @(posedge CLK or negedge RESET) begin
                 //$display("ID1:A:Reg[%d]=%x; B:Reg[%d]=%x; Write?%d to %d",RegA1, OpA1, RegB1, OpB1, (WriteRegister1!=5'd0)?RegWrite1:1'd0, WriteRegister1);
                 //$display("ID1:ALU_Control=%x; MemRead=%d; MemWrite=%d (%x); ShiftAmount=%d",ALU_control1, MemRead1, MemWrite1, MemWriteData1, shiftAmount1);
 			end
+`ifdef USE_ICACHE
+		end
+`endif
+`ifdef USE_DCACHE
+		end
+`endif
 	end
 end
 	
