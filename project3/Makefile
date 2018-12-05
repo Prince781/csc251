@@ -72,7 +72,7 @@ ENABLE_SUPERSCALAR=1
 else ifeq ($(PROJECT), 3)
 SM_FLAGS+=-DDEBUG_CACHE
 else ifeq ($(PROJECT), 4)
-ENABLE_OOO=1
+# ENABLE_OOO=1	# this causes bugs
 endif
 
 ifeq ($(ENABLE_SUPERSCALAR),1)
