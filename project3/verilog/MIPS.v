@@ -59,11 +59,18 @@ module MIPS (
     );
     
 
-//Connecting wires between IF and ID
+//Connecting wires between IF and queue and ID
+    wire [31:0] Instr1_IFFIFO;
     wire [31:0] Instr1_IFID;
+    wire [31:0] Instr_PC_IFFIFO;
     wire [31:0] Instr_PC_IFID;
+    wire [31:0] Instr_PC_Plus4_IFFIFO;
     wire [31:0] Instr_PC_Plus4_IFID;
+
+    wire        IF_wait_for_FIFO;
+    wire        ID_wait_for_FIFO;
 `ifdef USE_ICACHE
+    wire        Instr1_Available_IFFIFO;
     wire        Instr1_Available_IFID;
 `endif
     wire        STALL_IDIF;
@@ -152,11 +159,11 @@ module MIPS (
     IF IF(
         .CLK(CLK),
         .RESET(RESET),
-        .Instr1_OUT(Instr1_IFID),
-        .Instr_PC_OUT(Instr_PC_IFID),
-        .Instr_PC_Plus4(Instr_PC_Plus4_IFID),
+        .Instr1_OUT(Instr1_IFFIFO),
+        .Instr_PC_OUT(Instr_PC_IFFIFO),
+        .Instr_PC_Plus4(Instr_PC_Plus4_IFFIFO),
 `ifdef USE_ICACHE
-        .Instr1_Available(Instr1_Available_IFID),
+        .Instr1_Available(Instr1_Available_IFFIFO),
 `endif
         .STALL(STALL_IDIF),
         .Request_Alt_PC(Request_Alt_PC_IDIF),
@@ -165,8 +172,9 @@ module MIPS (
         .Instr1_fIM(Instr1_fIC)
 `ifdef USE_ICACHE
         ,
-        .Instr1_fIM_IsValid(Instr1_fIC_IsValid)
+        .Instr1_fIM_IsValid(Instr1_fIC_IsValid),
 `endif
+        .FIFO_blocked(IF_wait_for_FIFO)
     );
     
 `ifdef USE_DCACHE
@@ -202,7 +210,28 @@ module MIPS (
     wire [31:0] BypassData1_MEMID;
     wire        BypassValid1_MEMID;
 `endif
-    
+
+    wire [95:0] FIFO_in_IF_ID;
+    wire [95:0] FIFO_out_IF_ID;
+    wire        popping_ID;
+
+    assign FIFO_in_IF_ID = {Instr1_IFFIFO,Instr_PC_IFFIFO,Instr_PC_Plus4_IFFIFO};
+
+    FIFO #(8, "Fetch", "Decode") FIFO_IF_ID(
+        .CLK(CLK),
+        .RESET(RESET),
+        .in_data(FIFO_in_IF_ID),
+        .pushing(Instr1_Available_IFFIFO),
+        .popping(popping_ID),
+        .push_must_wait(IF_wait_for_FIFO),
+        .out_data(FIFO_out_IF_ID),
+        .pop_must_wait(ID_wait_for_FIFO)
+    );
+
+    assign Instr1_IFID = FIFO_out_IF_ID[95:64];
+    assign Instr_PC_IFID = FIFO_out_IF_ID[63:32];
+    assign Instr_PC_Plus4_IFID = FIFO_out_IF_ID[31:0];
+    assign Instr1_Available_IFID = !ID_wait_for_FIFO;
 	
 	ID ID(
 		.CLK(CLK),
@@ -250,7 +279,8 @@ module MIPS (
 		.BypassValid1_MEMID(BypassValid1_MEMID),
 `endif
 		.SYS(SYS),
-		.WANT_FREEZE(STALL_IDIF)
+		.WANT_FREEZE(STALL_IDIF),
+        .Request_Instr1(popping_ID)
 	);
 	
 	wire [31:0] Instr1_EXEMEM;

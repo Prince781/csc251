@@ -47,7 +47,7 @@ VERILOG_FILES=$(wildcard verilog/*.v)
 VERILATOR_BIN=${VERILATOR_DIR}/bin/verilator
 UNAME:=$(shell uname)
 SM_FLAGS=-O3
-VFLAGS+=--autoflush -O4 -Wall --l2-name v #-Wno-fatal
+VFLAGS+=--autoflush -O4 -Wall --l2-name v -Wno-fatal
 ifeq ($(VERILATOR_ALLOW_WARNINGS),1)
 VFLAGS+=-Wno-fatal
 endif

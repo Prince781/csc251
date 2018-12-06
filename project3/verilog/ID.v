@@ -90,7 +90,9 @@ module ID(
 	 //Tell the simulator to process a system call
 	 output reg SYS,
 	 //Tell fetch to stop advancing the PC, and wait.
-	 output WANT_FREEZE
+	 output WANT_FREEZE,
+     // are we ready to grab an instruction from the queue?
+     output Request_Instr1
     );
 	 
 	 wire [5:0]	ALU_control1;	//async. ALU_Control output
@@ -304,8 +306,10 @@ always @(posedge CLK or negedge RESET) begin
 		syscall_bubble_counter <= 0;
 		FORCE_FREEZE <= 0;
 		INHIBIT_FREEZE <= 0;
+        Request_Instr1 <= 0;
 	$display("ID:RESET");
 	end else begin
+        Request_Instr1 <= 1;
 `ifdef USE_DCACHE
 		if(STALL_fMEM) begin
 			$display("ID[STALL_fMEM]:Instr1_OUT=%x,Instr1_PC_OUT=%x", Instr1_OUT, Instr1_PC_OUT);

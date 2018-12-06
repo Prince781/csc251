@@ -38,8 +38,10 @@ module  IF
 `ifdef USE_ICACHE
     ,
     //Specifies that the instruction received was actually valid
-    input Instr1_fIM_IsValid
+    input Instr1_fIM_IsValid,
 `endif
+    // is the queue we're pushing to blocked?
+    input FIFO_blocked
 );
 
     wire [31:0] IncrementAmount;
@@ -53,7 +55,7 @@ module  IF
     
 `ifdef USE_ICACHE
     
-    assign Instr1_Available = Instr1_fIM_IsValid;
+    assign Instr1_Available = Instr1_fIM_IsValid && !FIFO_blocked;
     
 `endif
 
@@ -64,7 +66,9 @@ always @(posedge CLK or negedge RESET) begin
         Instr_PC_Plus4 <= 32'hBFC00000;
         $display("FETCH [RESET] Fetching @%x", Instr_PC_Plus4);
     end else if(CLK) begin
-        if(!STALL) begin
+        if (FIFO_blocked) begin
+            $display("FETCH: Stalling because queue is full; next request: %x", Instr_address_2IM);
+        end else if(!STALL) begin
 `ifdef USE_ICACHE
             if(Instr1_fIM_IsValid) begin
 `endif  //USE_ICACHE
