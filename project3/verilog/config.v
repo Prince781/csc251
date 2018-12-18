@@ -29,3 +29,5 @@
 //  RAT.v
 //  RetireCommit.v
 `endif
+
+`define ROB_ENTRY_BITS (1 /* executed? */ + 32 /*instr*/ + 32 /* addr */ + 32 /* alt_pc */ + 1 /* store? */ + 1 /* write? */ + /* ??? */)

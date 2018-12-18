@@ -22,32 +22,31 @@ module RAT #(
 )
 (	
     /* Write Me */
-	input CLK,
     input RESET,
-	input [`LOG_ARCH-1:0] Register_update_src,
-	input [`LOG_PHYS-1:0] Register_update_dst,
-	input [`LOG_ARCH-1:0] Register_request_in,
+	input [`LOG_ARCH-1:0] Register_update_src,  /* arch register */
+	input [`LOG_PHYS-1:0] Register_update_dst,  /* phys register */
+	input [`LOG_ARCH-1:0] Register_request_in,  /* arch register */
 	input Read, 
 	input Write,
-	output Register_request_out
-
-		); 
+	output Register_request_out /* pointer to physical register */
+); 
 
 	// actual RAT memory
 	reg [`LOG_PHYS-1:0] regPtrs [NUM_ARCH_REGS-1:0] /*verilator public_flat*/;
 
     /* Write Me */
 	always @(Read or Write) begin
-    if (!RESET) begin
-        $display("RAT %s RESET", Register_src);
-    end else begin
-        if (Read) begin
-			Register_request_out = regPtrs[Register_request_in];
-		end
+        if (!RESET) begin
+            $display("RAT RESET");
+        end else begin
+            if (Read) begin
+                Register_request_out = regPtrs[Register_request_in];
+            end
 
-		if (Write) begin
-			regPtrs[Register_update_src] = Register_update_dst;
-		end
+            if (Write) begin
+                regPtrs[Register_update_src] = Register_update_dst;
+            end
+        end
 	end
 
 endmodule

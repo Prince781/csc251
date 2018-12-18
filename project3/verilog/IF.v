@@ -55,7 +55,7 @@ module  IF
     
 `ifdef USE_ICACHE
     
-    assign Instr1_Available = Instr1_fIM_IsValid && !FIFO_blocked;
+    assign Instr1_Available = Instr1_fIM_IsValid; /* && !FIFO_blocked; */
     
 `endif
 

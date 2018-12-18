@@ -4,7 +4,6 @@ module FIFO #(
     parameter TO = "??"
 )
 (
-    input CLK,
     input RESET,
     input reg [95:0] in_data,       // contains instr, addr, PC+4
     input pushing,

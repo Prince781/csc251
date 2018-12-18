@@ -13,6 +13,8 @@ module  RetireCommit #(
     /* You may want more parameters here */
 )
 (
+    input CLK,
+    input RESET
     /* Write Me */
 );/*verilator public_module*/
 
@@ -21,6 +23,7 @@ RAT #(
     .NUM_PHYS_REGS(NUM_PHYS_REGS)
     /* Maybe Others? */
 )RRAT(
+    .RESET(RESET)
     /* Write Me */
 );
 

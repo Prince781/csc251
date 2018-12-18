@@ -9,7 +9,7 @@ PROJECT?=4
 
 #By default, Verilator will treat warnings as errors. To change this behavior, 
 #uncomment the following line:
-#VERILATOR_ALLOW_WARNINGS=1
+VERILATOR_ALLOW_WARNINGS=1
 
 #By default, verilator will not generate traces (vcd files). To change this 
 #behavior, uncomment the following line:
@@ -47,7 +47,7 @@ VERILOG_FILES=$(wildcard verilog/*.v)
 VERILATOR_BIN=${VERILATOR_DIR}/bin/verilator
 UNAME:=$(shell uname)
 SM_FLAGS=-O3
-VFLAGS+=--autoflush -O4 -Wall --l2-name v -Wno-fatal
+VFLAGS+=--autoflush -O4 -Wall --l2-name v
 ifeq ($(VERILATOR_ALLOW_WARNINGS),1)
 VFLAGS+=-Wno-fatal
 endif

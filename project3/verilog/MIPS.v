@@ -218,7 +218,6 @@ module MIPS (
     assign FIFO_in_IF_ID = {Instr1_IFFIFO,Instr_PC_IFFIFO,Instr_PC_Plus4_IFFIFO};
 
     FIFO #(8, "Fetch", "Decode") FIFO_IF_ID(
-        .CLK(CLK),
         .RESET(RESET),
         .in_data(FIFO_in_IF_ID),
         .pushing(Instr1_Available_IFFIFO),
@@ -457,6 +456,8 @@ module MIPS (
     RegRead RegRead(
     );
     RetireCommit RetireCommit(
+        .CLK(CLK),
+        .RESET(RESET)
     );
 `endif
 endmodule
