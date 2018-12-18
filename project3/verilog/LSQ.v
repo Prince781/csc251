@@ -5,7 +5,7 @@
 
 module LSQ #(
     parameter NUM_PHYS_REGS = 64,
-    parameter ENTRY_SIZE = 1 + LOG_PHYS + 32 // 1 load/store bit + physical register addr + memory addr
+    parameter ENTRY_SIZE = 1 + `LOG_PHYS + 32 // 1 load/store bit + physical register addr + memory addr
     parameter QUEUE_SIZE = 128 // TODO: Use more reasonable queue size
 )
 (
@@ -36,7 +36,6 @@ module LSQ #(
             tail = 0;
             full = 0;
             Full_OUT = 0;
-            Ready_OUT = 0;
             $display("Load/Store Queue: RESET");
         end
         else
