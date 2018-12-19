@@ -98,6 +98,7 @@ module IssueQueue #(
                         queue[counter] = queue[(counter + 1) % QUEUE_SIZE];
                         ready_bits[counter] = ready_bits[(counter + 1) % QUEUE_SIZE];
                     end
+                    ready_bits[tail] = 0;
                     tail = tail - 1;
                     full = 0;
                     DequeueResult_OUT = 1;
