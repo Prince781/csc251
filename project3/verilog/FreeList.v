@@ -16,14 +16,16 @@ module FreeList #(
     output reg [`LOG_PHYS - 1 : 0] Data_OUT
 );
     reg [`LOG_PHYS - 1 : 0] queue [NUM_PHYS_REGS - 1 : 0];
-    reg head, tail, full;
+    reg head;
+    reg tail;
+    reg full;
     wire counter;
 
     initial begin
         head = 0;
         tail = 0;
         full = 0;
-        counter = 0;
+        counter = 1;
         // Initialize queue. Enqueue all physical registers. 
         while (counter < `LOG_PHYS) begin
             queue[counter] = counter;
@@ -37,6 +39,7 @@ module FreeList #(
             head = 0;
             tail = 0;
             full = 0;
+            counter = 1;
             // Initialize queue. Enqueue all physical registers. 
             while (counter < `LOG_PHYS) begin
                 queue[counter] = counter;

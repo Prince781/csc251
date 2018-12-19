@@ -22,7 +22,9 @@ module LSQ #(
     output reg [ENTRY_SIZE - 1 : 0] Data_OUT
 );
     reg [ENTRY_SIZE - 1 : 0] queue [QUEUE_SIZE - 1 : 0];
-    reg head, tail, full;
+    reg head;
+    reg tail;
+    reg full;
     wire temp;
 
     wire LoadStore_IN;
