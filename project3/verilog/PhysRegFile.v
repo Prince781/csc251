@@ -1,12 +1,7 @@
+`include "config.v"
 
 
-
-`define LOG_PHYS    $clog2(NUM_PHYS_REGS)
-
-module PhysRegFile #(
-    parameter NUM_PHYS_REGS = 64 
-)
-(
+module PhysRegFile (
     /* Write Me */
     );
 	 
