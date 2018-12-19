@@ -38,8 +38,8 @@
 /* src1/src2 = ReadRegisterA1/ReadRegisterB1 */
 /* src1/src2 val = OperandA1/OperandB1 */
 /* anything in the issue queue has regwrite guaranteed */
-`define ISSUE_QUEUE_ENTRY_BITS (6 /* ALU op */ + LOG_PHYS /* src1 reg */ + 32 /* src1 val */ + 1 /* src1 ready? */ + LOG_PHYS /* src2 */ + 32 /* src2 val */ + 1 /* src2 ready? */ + 5 /* shift amount */ + 1 /* regwrite? */ +  LOG_PHYS /* dest */ + 1 /* memwrite? */ + 1 /* memread? */)
+`define ISSUE_QUEUE_ENTRY_BITS (6 /* ALU op */ + `LOG_PHYS /* src1 reg */ + 32 /* src1 val */ + 1 /* src1 ready? */ + `LOG_PHYS /* src2 */ + 32 /* src2 val */ + 1 /* src2 ready? */ + 5 /* shift amount */ + 1 /* regwrite? */ +  `LOG_PHYS /* dest */ + 1 /* memwrite? */ + 1 /* memread? */ + 1 /* stall mem? */)
 
-`define LOAD_STORE_QUEUE_ENTRY_BITS (1 /* 0 = load, 1 = store */ + 1 /* ready? */ + LOG_PHYS /* dest/src */ + 32 /* addr */)
+`define LOAD_STORE_QUEUE_ENTRY_BITS (1 /* 0 = load, 1 = store */ + 1 /* ready? */ + `LOG_PHYS /* dest/src */ + 32 /* addr */)
 
-`define ROB_ENTRY_BITS (1 /* executed? */ + 32 /*instr*/ + 32 /* addr */ + 32 /* alt_pc */ + 1 /* request alt_pc? */ + 1 /* write to R-RAT? */ + LOG_PHYS /* phys register */ + LOG_ARCH /* arch register */ /* +  ??? */)
+`define ROB_ENTRY_BITS (1 /* executed? */ + 32 /*instr*/ + 32 /* addr */ + 32 /* alt_pc */ + 1 /* request alt_pc? */ + 1 /* write to R-RAT? */ + `LOG_PHYS /* phys register */ + `LOG_ARCH /* arch register */ /* +  ??? */)

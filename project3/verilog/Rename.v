@@ -27,20 +27,20 @@ module RENAME
     input [4:0] ShiftAmount1_IN,
 
     // stuff from F-RAT, free list, ROB, and queues
-    input [LOG_PHYS-1:0] Map_arch_to_phys [NUM_ARCH_REGS-1:0],
-    input [LOG_PHYS-1:0] Free_phys_reg;
+    input [`LOG_PHYS-1:0] Map_arch_to_phys [`NUM_ARCH_REGS-1:0],
+    input [`LOG_PHYS-1:0] Free_phys_reg;
     input Free_reg_avail;
     input ROB_full,
     input Issue_queue_full,
     input Load_store_queue_full,
 
-    output [ISSUE_QUEUE_ENTRY_BITS-1:0] Issue_queue_entry,
+    output [`ISSUE_QUEUE_ENTRY_BITS-1:0] Issue_queue_entry,
     output Issue_queue_entry_valid,
-    output [LOAD_STORE_QUEUE_ENTRY_BITS-1:0] Load_store_queue_entry,
+    output [`LOAD_STORE_QUEUE_ENTRY_BITS-1:0] Load_store_queue_entry,
     output Load_store_queue_entry_valid,
 
-    output [ROB_ENTRY_BITS-1:0] ROB_entry,  // we don't need ROB_entry_valid because we rely on Blocked
-    output [1:0] Grabbed_regs,              // number of registers we grabbed off the free list
+    output [`ROB_ENTRY_BITS-1:0] ROB_entry, // we don't need ROB_entry_valid because we rely on Blocked
+    output Grabbed_regs,                    // number of registers we grabbed off the free list
 
     output Blocked                          // whether the Rename stage can proceed
 );

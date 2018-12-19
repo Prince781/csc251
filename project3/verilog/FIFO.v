@@ -1,20 +1,21 @@
 module FIFO #(
     parameter SIZE = 16,
+    parameter ELEM_SIZE_BITS = 96,
     parameter FROM = "??",
-    parameter TO = "??"
+    parameter TO = "??",
 )
 (
     input RESET,
-    input reg [95:0] in_data,       // contains instr, addr, PC+4
+    input reg [ELEM_SIZE_BITS-1:0] in_data,             // contains instr, addr, PC+4
     input pushing,
     input popping,
     output reg push_must_wait,
-    output reg [95:0] out_data,
+    output reg [ELEM_SIZE_BITS-1:0] out_data,
     output reg pop_must_wait
 );
 
-reg [95:0] queue [SIZE:0];          // not SIZE-1 because we're using modular arithmetic
-reg [$clog2(SIZE):0] head, tail;    // not clog2(SIZE)-1 because we're using modular arithmetic
+reg [ELEM_SIZE_BITS-1:0] queue [SIZE:0];        // not SIZE-1 because we're using modular arithmetic
+reg [$clog2(SIZE):0] head, tail;                // not clog2(SIZE)-1 because we're using modular arithmetic
 
 `define QUEUE_SIZE (tail >= head ? tail - head : tail + (SIZE - head))
 `define QUEUE_FULL (`QUEUE_SIZE == SIZE)

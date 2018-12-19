@@ -1,4 +1,4 @@
-
+`include "config.v"
 
 `define LOG_PHYS    $clog2(NUM_PHYS_REGS)
 
@@ -17,11 +17,10 @@ module RegRead#(
     output [31:0] RegValueA_OUT,
     output [31:0] RegValueB_OUT,
     output [31:0] RegValueC_OUT,
-
     );
 
 	PhysRegFile  #(
-	.NUM_PHYS_REGS(NUM_PHYS_REGS)
+	.NUM_PHYS_REGS(`NUM_PHYS_REGS)
 	)
 	PhysRegFile(
         .CLK(CLK),

@@ -68,7 +68,7 @@ module MIPS (
     wire [31:0] Instr_PC_Plus4_IFID;
 
     wire        IF_wait_for_FIFO;
-    wire        ID_wait_for_FIFO;
+    wire        ID_wait_for_FIFO_pop;
 `ifdef USE_ICACHE
     wire        Instr1_Available_IFFIFO;
     wire        Instr1_Available_IFID;
@@ -194,6 +194,7 @@ module MIPS (
     wire [4:0]  RegisterB1_IDEXE;
 `endif
     wire [4:0]  WriteRegister1_IDEXE;
+    wire        ALUSrc_IDEXE;
     wire [31:0] MemWriteData1_IDEXE;
     wire        RegWrite1_IDEXE;
     wire [5:0]  ALU_Control1_IDEXE;
@@ -217,20 +218,20 @@ module MIPS (
 
     assign FIFO_in_IF_ID = {Instr1_IFFIFO,Instr_PC_IFFIFO,Instr_PC_Plus4_IFFIFO};
 
-    FIFO #(8, "Fetch", "Decode") FIFO_IF_ID(
+    FIFO #(8, 96, "Fetch", "Decode") FIFO_IF_ID(
         .RESET(RESET),
         .in_data(FIFO_in_IF_ID),
         .pushing(Instr1_Available_IFFIFO),
         .popping(popping_ID),
         .push_must_wait(IF_wait_for_FIFO),
         .out_data(FIFO_out_IF_ID),
-        .pop_must_wait(ID_wait_for_FIFO)
+        .pop_must_wait(ID_wait_for_FIFO_pop)
     );
 
     assign Instr1_IFID = FIFO_out_IF_ID[95:64];
     assign Instr_PC_IFID = FIFO_out_IF_ID[63:32];
     assign Instr_PC_Plus4_IFID = FIFO_out_IF_ID[31:0];
-    assign Instr1_Available_IFID = !ID_wait_for_FIFO;
+    assign Instr1_Available_IFID = !ID_wait_for_FIFO_pop;
 	
 	ID ID(
 		.CLK(CLK),
@@ -245,6 +246,7 @@ module MIPS (
 		.Instr_PC_IN(Instr_PC_IFID),
 		.Instr_PC_Plus4_IN(Instr_PC_Plus4_IFID),
 		.WriteRegister1_IN(WriteRegister1_MEMWB),
+        .ALUSrc(ALUSrc_IDEXE),
 		.WriteData1_IN(WriteData1_MEMWB),
 		.RegWrite1_IN(RegWrite1_MEMWB),
 		.Alt_PC(Alt_PC_IDIF),
@@ -295,6 +297,120 @@ module MIPS (
     wire [31:0] ALU_result_async1;
     wire        ALU_result_async_valid1;
 `endif
+    wire [95:0] FIFO_in_ID_RENAME;
+    wire        Instr1_Available_IDFIFO;
+    wire        popping_RENAME;
+    wire        ID_wait_for_FIFO_push;
+    wire [95:0] FIFO_out_ID_RENAME;
+    wire        RENAME_wait_for_FIFO_pop;
+
+    // stuff from F-RAT, free list, ROB, and queues going into RENAME
+    wire [`LOG_PHYS-1:0] Map_arch_to_phys [`NUM_ARCH_REGS-1:0];
+    wire [`LOG_PHYS-1:0] Free_phys_reg;
+    wire Free_reg_avail;
+    wire ROB_full;
+    wire Issue_queue_full;
+    wire Load_store_queue_full;
+
+    // stuff from RENAME going into F-RAT, LSQ, free list, ROB
+    wire [`ISSUE_QUEUE_ENTRY_BITS-1:0] Entry_RENAME_IQ;
+    wire Entry_valid_RENAME_IQ;
+    wire [`LOAD_STORE_QUEUE_ENTRY_BITS-1:0] Entry_RENAME_LSQ;
+    wire Entry_valid_RENAME_LSQ;
+    wire [`ROB_ENTRY_BITS-1:0] Entry_RENAME_ROB;
+    wire Grabbed_regs_RENAME_FL;
+    wire RENAME_blocked;
+
+    assign FIFO_in_ID_RENAME = {};  // TODO
+
+    FIFO #(8, "Decode", "Rename") FIFO_DECODE_RENAME(
+        .RESET(RESET),
+        .in_data(FIFO_in_ID_RENAME),
+        .pushing(Instr1_Available_IDFIFO),
+        .popping(popping_RENAME),
+        .push_must_wait(ID_wait_for_FIFO_push),
+        .out_data(FIFO_out_ID_RENAME),
+        .pop_must_wait(RENAME_wait_for_FIFO_pop),
+    );
+
+    assign Instr1_IDRENAME = FIFO_out_ID_RENAME[95:64];
+    assign Instr_PC_IDRENAME = FIFO_out_ID_RENAME[63:32];
+    assign Instr_PC_Plus4_IDRENAME = FIFO_out_ID_RENAME[31:0];
+    assign Instr1_Available_IDRENAME = !RENAME_wait_for_FIFO_pop;
+
+    // stuff from ID
+    assign Alt_PC_IDRENAME = FIFO_out_ID_RENAME[127:96];
+    assign Request_Alt_PC_IDRENAME = FIFO_out_ID_RENAME[128];
+    assign OperandA1_IDRENAME = FIFO_out_ID_RENAME[160:129];
+    assign OperandB1_IDRENAME = FIFO_out_ID_RENAME[192:161];
+    assign ReadRegisterA1_IDRENAME = FIFO_out_ID_RENAME[224:193];
+    assign ReadRegisterB1_IDRENAME = FIFO_out_ID_RENAME[256:225];
+    assign WriteRegister1_IDRENAME = FIFO_out_ID_RENAME[261:257];
+    assign ALUSrc1_IDRENAME = FIFO_out_ID_RENAME[262];
+    assign MemWriteData1_IDRENAME = FIFO_out_ID_RENAME[294:263];
+    assign ALU_Control1_IDRENAME = FIFO_out_ID_RENAME[300:295];
+    assign RegWrite_IDRENAME = FIFO_out_ID_RENAME[301];
+    assign MemRead_IDRENAME = FIFO_out_ID_RENAME[302];
+    assign MemWrite_IDRENAME = FIFO_out_ID_RENAME[303];
+    assign ShiftAmount1_IDRENAME = FIFO_out_ID_RENAME[308:304];
+
+    RENAME RENAME(
+        .CLK(CLK),
+        .RESET(RESET),
+        .Instr1_Valid_IN(Instr1_Available_IDRENAME),
+        .Instr1_IN(Instr1_IDRENAME),
+        .Instr1_addr(Instr_PC_IDRENAME),
+        .Alt_PC(Alt_PC_IDRENAME),
+        .Request_Alt_PC(Request_Alt_PC_IDRENAME),
+        .OperandA1_IN(OperandA1_IDRENAME),
+        .OperandB1_IN(OperandB1_IDRENAME),
+        .ReadRegisterA1_IN(ReadRegisterA1_IDRENAME),
+        .ReadRegisterB1_IN(ReadRegisterB1_IDRENAME),
+        .WriteRegister1_IN(WriteRegister1_IDRENAME),
+        .ALUSrc1(ALUSrc1_IDRENAME),
+        .MemWriteData1(MemWrite_IDRENAME),
+        .ALU_Control1_IN(ALU_Control1_IDRENAME),
+        .RegWrite_IN(RegWrite_IDRENAME),
+        .MemRead_IN(MemRead_IDRENAME),
+        .MemWrite_IN(MemWrite_IDRENAME),
+        .ShiftAmount1_IN(ShiftAmount1_IDRENAME),
+        .Map_arch_to_phys(),
+        .Free_phys_reg(Free_phys_reg),
+        .Free_reg_avail(Free_reg_avail),
+        .ROB_full(),
+        .Issue_queue_full(),
+        .Load_store_queue_full(LSQ_full),
+        .Issue_queue_entry(),
+        .Issue_queue_entry_valid(),
+        .Load_store_queue_entry(),
+        .Load_store_queue_entry_valid(),
+        .ROB_entry(),
+        .Grabbed_regs(),
+        .Blocked(RENAME_blocked)
+    );
+
+    LSQ #(`NUM_PHYS_REGS) LSQ(
+        .CLK(CLK),
+        .RESET(RESET),
+        .FLUSH(),
+        .Enqueue_IN(Entry_valid_RENAME_LSQ),
+        .Entry_IN(Entry_RENAME_LSQ),
+        .Dequeue_IN(),
+        .Full_OUT(LSQ_full),
+        .DequeueResult_OUT(Entry_valid_LSQ),
+        .EnqueueResult(),   /* TODO */
+        .Data_OUT(Entry_LSQ)
+    );
+
+    FreeList #(`NUM_PHYS_REGS) FL(
+        .CLK(CLK),
+        .RESET(RESET),
+        .Enqueue_IN(Enqueue_entry_ROB_FL),
+        .Data_IN(Entry_ROB_FL),
+        .Dequeue_IN(Dequeue_entry_RENAME_FL),
+        .DequeueResult_OUT(Free_reg_avail),
+        .Data_OUT(Free_phys_reg)
+    );
 	
 	EXE EXE(
 		.CLK(CLK),

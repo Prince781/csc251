@@ -14,10 +14,7 @@ module LSQ #(
     input RESET,
     input FLUSH,
     input Enqueue_IN, // 0 = no new data to enqueue, 1 = enqueue, 2 = update
-    input [0:0] LoadStore_IN, // 0 = load, 1 = store
-    input [0:0] Ready_IN, // 0 = not ready, 1 = ready
-    input [`LOG_PHYS - 1 : 0] Register_IN, // Physical register
-    input [31:0] Addr_IN, // Memory addr
+    input [ENTRY_SIZE-1:0] Entry_IN, // entry
     input Dequeue_IN, // 0 = no need to dequeue, 1 = dequeue
     output Full_OUT, // 0 = not full, 1 = full
     output DequeueResult_OUT, // 0 = no dequeue request or dequeue failed, 1 = dequeue succeeded
@@ -28,11 +25,21 @@ module LSQ #(
     reg head, tail, full;
     wire temp;
 
+    wire LoadStore_IN;
+    wire Ready_IN;
+    wire [`LOG_PHYS-1:0] Register_IN;
+    wire [31:0] Addr_IN;
+
     initial begin
         head = 0;
         tail = 0;
         full = 0;
     end
+
+    assign LoadStore_IN = Entry_IN[ENTRY_SIZE-1];
+    assign Ready_IN = Entry_IN[ENTRY_SIZE - 1 - 1];
+    assign Register_IN = Entry_IN[ENTRY_SIZE-2 - 1: (ENTRY_SIZE-2 - 1) - (LOG_PHYS-1)];
+    assign Addr_IN = Entry_IN[31:0];
 
     always @(posedge CLK or negedge RESET) begin
         EnqueueResult_OUT = 0;

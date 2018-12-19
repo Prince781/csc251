@@ -13,7 +13,6 @@ module FreeList #(
     input reg [`LOG_PHYS - 1 : 0] Data_IN,
     input Dequeue_IN, // 0 = no need to dequeue, 1 = dequeue
     output DequeueResult_OUT, // 0 = no dequeue request or dequeue failed, 1 = dequeue succeeded
-    output EnqueueResult_OUT, // 0 = no enqueue request or enqueue failed, 1 = enqueue succeeded
     output reg [`LOG_PHYS - 1 : 0] Data_OUT
 );
     reg [`LOG_PHYS - 1 : 0] queue [NUM_PHYS_REGS - 1 : 0];
@@ -33,7 +32,6 @@ module FreeList #(
     end
 
     always @(posedge CLK or negedge RESET) begin
-        EnqueueResult_OUT = 0;
         DequeueResult_OUT = 0;
         if (!RESET) begin
             head = 0;
@@ -59,7 +57,6 @@ module FreeList #(
                     if (tail == head) begin
                         full = 1;
                     end
-                    EnqueueResult_OUT = 1;
                 end
             end
             if (Dequeue_IN) begin
