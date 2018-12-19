@@ -5,14 +5,19 @@
 
 module LSQ #(
     parameter NUM_PHYS_REGS = 64,
-    parameter ENTRY_SIZE = 1 + `LOG_PHYS + 32 // 1 load/store bit + physical register addr + memory addr
-    parameter QUEUE_SIZE = 128 // TODO: Use more reasonable queue size
+    parameter ENTRY_SIZE = 1 + 1 + `LOG_PHYS + 32
+    // 1 load/store bit + 1 ready bit + physical register addr + memory addr
+    parameter QUEUE_SIZE = 16 // TODO: Use more reasonable queue size
 )
 (
     input CLK,
     input RESET,
-    input Enqueue_IN, // 0 = no new data to enqueue, 1 = enqueue
-    input reg [ENTRY_SIZE - 1 : 0] Data_IN,
+    input FLUSH,
+    input Enqueue_IN, // 0 = no new data to enqueue, 1 = enqueue, 2 = update
+    input [0:0] LoadStore_IN, // 0 = load, 1 = store
+    input [0:0] Ready_IN, // 0 = not ready, 1 = ready
+    input [`LOG_PHYS - 1 : 0] Register_IN, // Physical register
+    input [31:0] Addr_IN, // Memory addr
     input Dequeue_IN, // 0 = no need to dequeue, 1 = dequeue
     output Full_OUT, // 0 = not full, 1 = full
     output DequeueResult_OUT, // 0 = no dequeue request or dequeue failed, 1 = dequeue succeeded
@@ -21,6 +26,7 @@ module LSQ #(
 );
     reg [ENTRY_SIZE - 1 : 0] queue [QUEUE_SIZE - 1 : 0];
     reg head, tail, full;
+    wire temp;
 
     initial begin
         head = 0;
@@ -32,13 +38,21 @@ module LSQ #(
         EnqueueResult_OUT = 0;
         DequeueResult_OUT = 0;
         if (!RESET) begin
+            // TODO: Reset shouldn't flush LSQ
             head = 0;
             tail = 0;
             full = 0;
             Full_OUT = 0;
             $display("Load/Store Queue: RESET");
         end
-        else
+        else if (FLUSH) begin
+            head = 0;
+            tail = 0;
+            full = 0;
+            Full_OUT = 0;
+            $display("Load/Store Queue: FLUSH");
+        end
+        else begin
             // Dequeue first so when the queue is full and there are both enqueue request and dequeue request,
             // there will be space for new enqueue request
             if (Dequeue_IN) begin
@@ -49,14 +63,29 @@ module LSQ #(
                     DequeueResult_OUT = 1;
                 end
             end
-            if (Enqueue_IN) begin
+            // Enqueue
+            if (Enqueue_IN == 1) begin
                 if (!full) begin
-                    queue[tail] = Data_IN;
+                    queue[tail] = {LoadStore_IN, Ready_IN, Register_IN, Addr_IN};
                     tail = (tail + 1) % QUEUE_SIZE;
                     if (tail == head) begin
                         full = 1;
                     end
                     EnqueueResult_OUT = 1;
+                end
+            end
+            // Update
+            if (Enqueue_IN == 2) begin
+                temp = 0;
+                // Locate the entry to update
+                while ((temp < QUEUE_SIZE) && (queue[temp][ENTRY_SIZE - 1] != LoadStore_IN || queue[temp][(32 + `LOG_PHYS - 1) : 32] != Register_IN)) begin
+                    temp = temp + 1;
+                end
+                if (temp < QUEUE_SIZE) begin
+                    queue[temp] = {LoadStore_IN, 1'b1, Register_IN, Addr_IN};
+                    EnqueueResult_OUT = 1;
+                end else begin
+                    $display("ERROR: Load Store Queue: Entry not found when updating");
                 end
             end
             Full_OUT = full;
