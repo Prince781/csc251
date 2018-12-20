@@ -42,7 +42,7 @@ module IssueQueue #(
     wire [5:0] op;
 
     reg initialized;
-    
+
     integer i;
 
 
@@ -62,8 +62,8 @@ module IssueQueue #(
             end
         end
         else begin
-            // Update, dequeue, then enqueue to make sure that register ready bit is updated before select phase 
-            //`define ISSUE_QUEUE_ENTRY_BITS (6 /* ALU op */ + 1 /* has immediate? */ + 32 /* immediate */ + `PROJ_LOG_PHYS /* src1 reg */ + 1 /* src1 ready? */ + `PROJ_LOG_PHYS /* src2 */ + 1 /* src2 ready? */ + 5 /* shift amount */ + 1 /* regwrite? */ +  `PROJ_LOG_PHYS /* dest */ + 1 /* memwrite? */ + 1 /* memread? */)            
+            // Update, dequeue, then enqueue to make sure that register ready bit is updated before select phase
+            //`define ISSUE_QUEUE_ENTRY_BITS (6 /* ALU op */ + 1 /* has immediate? */ + 32 /* immediate */ + `PROJ_LOG_PHYS /* src1 reg */ + 1 /* src1 ready? */ + `PROJ_LOG_PHYS /* src2 */ + 1 /* src2 ready? */ + 5 /* shift amount */ + 1 /* regwrite? */ +  `PROJ_LOG_PHYS /* dest */ + 1 /* memwrite? */ + 1 /* memread? */)
             // WAKE_UP
             if (ReadyUpdate_IN) begin
                 for (i = 0; i != tail; i = i + 1) begin
@@ -75,7 +75,7 @@ module IssueQueue #(
                         src2ready <= 1;
                     end
                     if (src1 == 1 && src2 == 1) begin
-                        ready_bits[i] <= 1;
+                        ready_bits[i] = 1;
                     end
                 end
             end
@@ -87,8 +87,8 @@ module IssueQueue #(
                 if (i != tail) begin
                     entry_selected <= queue[i];
                     while ((i + 1) % QUEUE_SIZE < tail) begin
-                        queue[i] <= queue[(i + 1) % QUEUE_SIZE];
-                        ready_bits[i] <= ready_bits[(i + 1) % QUEUE_SIZE];
+                        queue[i] = queue[(i + 1) % QUEUE_SIZE];
+                        ready_bits[i] = ready_bits[(i + 1) % QUEUE_SIZE];
                     end
                     ready_bits[tail[`LOG_SIZE - 1:0]] <= 0;
                     tail <= tail - 1;
@@ -108,8 +108,8 @@ module IssueQueue #(
                 end
             end
             Full_OUT <= full;
-            
-            
+
+
         end
     end
 endmodule

@@ -1,7 +1,7 @@
 /**************************************
 * Module: RetireCommit
-* Date:2013-12-10  
-* Author: isaac     
+* Date:2013-12-10
+* Author: isaac
 *
 * Description: Handles commits to the ROB, and retires instructions from the ROB.
 *
@@ -73,8 +73,7 @@ RAT #(
     .Register_update_src(Arch_reg),
     .Register_update_dst(Phys_reg),
     .Write(update_ROB_RRAT),
-    .RegPtrs(RegPtrs_OUT)
+    .regPtrs(RegPtrs_OUT)
 );
 
 endmodule
-

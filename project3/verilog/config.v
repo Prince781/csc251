@@ -32,7 +32,7 @@
 
 `define PROJ_NUM_PHYS_REGS 64
 `define PROJ_LOG_PHYS    $clog2(`PROJ_NUM_PHYS_REGS)
-`define PROJ_NUM_ARCH_REGS 32
+`define PROJ_NUM_ARCH_REGS 35
 `define PROJ_LOG_ARCH    $clog2(`PROJ_NUM_ARCH_REGS)
 
 /* src1/src2 = ReadRegisterA1/ReadRegisterB1 */

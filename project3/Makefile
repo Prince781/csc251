@@ -7,15 +7,15 @@ PROJECT?=4
 #3: scalar with caches  [Called project 2]
 #4: single-issue out-of-order with caches [Called project 3]
 
-#By default, Verilator will treat warnings as errors. To change this behavior, 
+#By default, Verilator will treat warnings as errors. To change this behavior,
 #uncomment the following line:
-VERILATOR_ALLOW_WARNINGS=1
+#VERILATOR_ALLOW_WARNINGS=1
 
-#By default, verilator will not generate traces (vcd files). To change this 
+#By default, verilator will not generate traces (vcd files). To change this
 #behavior, uncomment the following line:
 #SUPPORT_VCD=1
 
-#When completing projects 3 and 4, if you want to enable the superscalar 
+#When completing projects 3 and 4, if you want to enable the superscalar
 #features in sim_main, uncomment the following line:
 #ENABLE_SUPERSCALAR=1
 
@@ -72,7 +72,7 @@ ENABLE_SUPERSCALAR=1
 else ifeq ($(PROJECT), 3)
 SM_FLAGS+=-DDEBUG_CACHE
 else ifeq ($(PROJECT), 4)
-# ENABLE_OOO=1	# this causes bugs
+ENABLE_OOO=1
 endif
 
 ifeq ($(ENABLE_SUPERSCALAR),1)
@@ -105,7 +105,7 @@ ${VERILATOR_DIR}/configure : ${VERILATOR_TAR_PATH}
 	tar ${VERILATOR_UNTAR_OPTIONS} ${VERILATOR_TAR_PATH} -C ${VERILATOR_REL_PATH}
 	touch ${VERILATOR_DIR}/configure
 
-${VERILATOR_TAR_PATH} : 
+${VERILATOR_TAR_PATH} :
 	wget ${VERILATOR_TAR_URL} -O ${VERILATOR_TAR_PATH}
 
 .INTERMEDIATE : ece401-tests.tar.xz ${VERILATOR_TAR_PATH}
@@ -131,4 +131,3 @@ clean :
 
 clean_verilator :
 	rm -rf ${VERILATOR_REL_PATH}verilator-*/
-
