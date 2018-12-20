@@ -25,7 +25,6 @@ module IssueQueue #(
     reg ready_bits [QUEUE_SIZE];
     reg [`LOG_SIZE: 0] tail;
     reg full;
-    reg [`LOG_SIZE:0] counter; // I'm not sure if it should be reg or wire
     reg [`ISSUE_QUEUE_ENTRY_BITS - 1:0] entry_selected;
 
     // Structure of issue queue entry
@@ -42,81 +41,73 @@ module IssueQueue #(
     wire has_immediate;
     wire [5:0] op;
 
+    reg initialized;
+    
+    integer i;
 
-    initial begin
-        tail = 0;
-        full = 0;
-        counter = 0;
-        while (counter <= QUEUE_SIZE) begin
-            ready_bits[counter[3:0]] = 0;
-            counter = counter + 1;
-        end
-    end
 
     always @(posedge CLK or negedge RESET) begin
-        EnqueueResult_OUT = 0;
-        DequeueResult_OUT = 0;
-        if (!RESET) begin
-            tail = 0;
-            full = 0;
-            counter = 0;
-            while (counter < QUEUE_SIZE) begin
-                ready_bits[counter[3:0]] = 0;
-                counter = counter + 1;
+        EnqueueResult_OUT <= 0;
+        DequeueResult_OUT <= 0;
+        if (!RESET || !initialized) begin
+            tail <= 0;
+            full <= 0;
+            for (i = 0; i <= QUEUE_SIZE; i = i + 1) begin
+               ready_bits[i] <= i;
             end
-            $display("Issue Queue: RESET");
+            if (initialized) begin
+                $display("Issue Queue: initializing");
+            end else begin
+                $display("Issue Queue: RESET");
+            end
         end
         else begin
             // Update, dequeue, then enqueue to make sure that register ready bit is updated before select phase 
             //`define ISSUE_QUEUE_ENTRY_BITS (6 /* ALU op */ + 1 /* has immediate? */ + 32 /* immediate */ + `PROJ_LOG_PHYS /* src1 reg */ + 1 /* src1 ready? */ + `PROJ_LOG_PHYS /* src2 */ + 1 /* src2 ready? */ + 5 /* shift amount */ + 1 /* regwrite? */ +  `PROJ_LOG_PHYS /* dest */ + 1 /* memwrite? */ + 1 /* memread? */)            
             // WAKE_UP
             if (ReadyUpdate_IN) begin
-                counter = 0;
-                while (counter != tail) begin
-                    {op, has_immediate, immediate, src1, src1ready, src2, src2ready, shift, regwrite, dest, memwrite, memread} = queue[counter];
+                for (i = 0; i != tail; i = i + 1) begin
+                    {op, has_immediate, immediate, src1, src1ready, src2, src2ready, shift, regwrite, dest, memwrite, memread} <= queue[i];
                     if (src1 == ReadyRegister_IN) begin
-                        src1ready = 1;
+                        src1ready <= 1;
                     end
                     if (src2 == ReadyRegister_IN) begin
-                        src2ready = 1;
+                        src2ready <= 1;
                     end
                     if (src1 == 1 && src2 == 1) begin
-                        ready_bits[counter[3:0]] = 1;
+                        ready_bits[i] <= 1;
                     end
-                    counter = counter + 1;
                 end
             end
             // TODO: Better select algorithm
             // SELECT
             if (Dequeue_IN) begin
-                counter = 0;
-                while (counter < tail && ready_bits[counter[3:0]] != 1) begin
-                    counter = (counter + 1) % QUEUE_SIZE;
+                for (i = 0; i < tail && ready_bits[i] != 1; i = (i + 1) % QUEUE_SIZE) begin
                 end
-                if (counter != tail) begin
-                    entry_selected = queue[counter];
-                    while ((counter + 1) % QUEUE_SIZE < tail) begin
-                        queue[counter] = queue[(counter + 1) % QUEUE_SIZE];
-                        ready_bits[counter[3:0]] = ready_bits[(counter + 1) % QUEUE_SIZE];
+                if (i != tail) begin
+                    entry_selected <= queue[i];
+                    while ((i + 1) % QUEUE_SIZE < tail) begin
+                        queue[i] <= queue[(i + 1) % QUEUE_SIZE];
+                        ready_bits[i] <= ready_bits[(i + 1) % QUEUE_SIZE];
                     end
-                    ready_bits[tail[`LOG_SIZE - 1:0]] = 0;
-                    tail = tail - 1;
-                    full = 0;
-                    DequeueResult_OUT = 1;
+                    ready_bits[tail[`LOG_SIZE - 1:0]] <= 0;
+                    tail <= tail - 1;
+                    full <= 0;
+                    DequeueResult_OUT <= 1;
                 end
             end
             //ENQUEUE
             if (Enqueue_IN) begin
                 if (!full) begin
-                    queue[tail] = IssueQueueEntry_IN;
-                    tail = (tail + 1) % QUEUE_SIZE;
-                    if (tail == QUEUE_SIZE) begin
-                        full = 1;
+                    queue[tail] <= IssueQueueEntry_IN;
+                    tail <= (tail + 1) % QUEUE_SIZE;
+                    if ((tail+1) == QUEUE_SIZE) begin
+                        full <= 1;
                     end
-                    EnqueueResult_OUT = 1;
+                    EnqueueResult_OUT <= 1;
                 end
             end
-            Full_OUT = full;
+            Full_OUT <= full;
             
             
         end

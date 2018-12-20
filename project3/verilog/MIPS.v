@@ -194,7 +194,6 @@ module MIPS (
     wire [4:0]  RegisterB1_IDEXE;
 `endif
     wire [4:0]  WriteRegister1_IDEXE;
-    wire        ALUSrc_IDEXE;
     wire [31:0] MemWriteData1_IDEXE;
     wire        RegWrite1_IDEXE;
     wire [5:0]  ALU_Control1_IDEXE;
@@ -247,13 +246,14 @@ module MIPS (
 		.Instr_PC_IN(Instr_PC_IFID),
 		.Instr_PC_Plus4_IN(Instr_PC_Plus4_IFID),
 		.WriteRegister1_IN(WriteRegister1_MEMWB),
-        .ALUSrc(ALUSrc_IDEXE),
 		.WriteData1_IN(WriteData1_MEMWB),
 		.RegWrite1_IN(RegWrite1_MEMWB),
 		.Alt_PC(Alt_PC_IDIF),
 		.Request_Alt_PC(Request_Alt_PC_IDIF),
 		.Instr1_OUT(Instr1_IDEXE),
         .Instr1_PC_OUT(Instr1_PC_IDEXE),
+        .HasImmediate_OUT(HasImmediate_IDFIFO),
+        .Immediate_OUT(Immediate_IDFIFO),
 `ifdef HAS_FORWARDING
 		.ReadRegisterA1_OUT(RegisterA1_IDEXE),
 		.ReadRegisterB1_OUT(RegisterB1_IDEXE),
@@ -305,7 +305,6 @@ module MIPS (
     // stuff from ID into RENAME
     wire [31:0] Instr1_IDRENAME;
     wire [31:0] Instr1_PC_IDRENAME;
-    wire [31:0] Instr_PC_Plus4_IDRENAME;
     wire        Instr1_Available_IDRENAME;
 
     wire [31:0] Alt_PC_IDRENAME;
@@ -313,7 +312,8 @@ module MIPS (
     wire [4:0]  ReadRegisterA1_IDRENAME;
     wire [4:0]  ReadRegisterB1_IDRENAME;
     wire [4:0]  WriteRegister1_IDRENAME;
-    wire        ALUSrc1_IDRENAME;
+    wire        HasImmediate_IDRENAME;
+    wire [31:0] Immediate_IDRENAME;
     wire [31:0] MemWriteData1_IDRENAME;
     wire [4:0]  ALU_Control1_IDRENAME;
     wire        RegWrite_IDRENAME;
@@ -338,13 +338,24 @@ module MIPS (
     wire Grabbed_regs_RENAME_FL;
     wire RENAME_blocked;
 
+    // ID passing data into FIFO
+    assign FIFO_in_ID_RENAME = {
+        Instr_PC_IDRENAME,
+        Instr1_IDRENAME,
+        Alt_PC_IDRENAME,
+        Request_Alt_PC_IDRENAME,
+        ReadRegisterA1_IDRENAME,
+        ReadRegisterB1_IDRENAME,
+        WriteRegister1_IDRENAME,
+        MemWriteData1_IDRENAME,
+        ALU_Control1_IDRENAME,
+        RegWrite_IDRENAME,
+        MemRead_IDRENAME,
+        MemWrite_IDRENAME,
+        ShiftAmount1_IDRENAME
+    };
 
-    // stuff from F-RAT to RENAME
-    wire [4:0] FRAT_ptrs [34:0];
-
-    // assign FIFO_in_ID_RENAME = {};  // TODO
-
-    FIFO #(8, "Decode", "Rename") FIFO_DECODE_RENAME(
+    FIFO #(8, 96, "Decode", "Rename") FIFO_DECODE_RENAME(
         .CLK(CLK),
         .RESET(RESET),
         .in_data(FIFO_in_ID_RENAME),
@@ -355,24 +366,27 @@ module MIPS (
         .pop_must_wait(RENAME_wait_for_FIFO_pop)
     );
 
-    assign Instr1_IDRENAME = FIFO_out_ID_RENAME[95:64];
-    assign Instr_PC_IDRENAME = FIFO_out_ID_RENAME[63:32];
-    assign Instr_PC_Plus4_IDRENAME = FIFO_out_ID_RENAME[31:0];
     assign Instr1_Available_IDRENAME = !RENAME_wait_for_FIFO_pop;
 
-    // stuff from ID
-    assign Alt_PC_IDRENAME = FIFO_out_ID_RENAME[127:96];
-    assign Request_Alt_PC_IDRENAME = FIFO_out_ID_RENAME[128];
-    assign ReadRegisterA1_IDRENAME = FIFO_out_ID_RENAME[125:121];
-    assign ReadRegisterB1_IDRENAME = FIFO_out_ID_RENAME[130:126];
-    assign WriteRegister1_IDRENAME = FIFO_out_ID_RENAME[135:131];
-    assign ALUSrc1_IDRENAME = FIFO_out_ID_RENAME[136];
-    assign MemWriteData1_IDRENAME = FIFO_out_ID_RENAME[168:137];
-    assign ALU_Control1_IDRENAME = FIFO_out_ID_RENAME[174:169];
-    assign RegWrite_IDRENAME = FIFO_out_ID_RENAME[175];
-    assign MemRead_IDRENAME = FIFO_out_ID_RENAME[176];
-    assign MemWrite_IDRENAME = FIFO_out_ID_RENAME[177];
-    assign ShiftAmount1_IDRENAME = FIFO_out_ID_RENAME[182:178];
+    // stuff from ID (extracted from FIFO)
+    assign Instr_PC_IDRENAME = FIFO_out_ID_RENAME[31:0];
+    assign Instr1_IDRENAME = FIFO_out_ID_RENAME[63:32];
+    assign Alt_PC_IDRENAME = FIFO_out_ID_RENAME[95:64];
+    assign Request_Alt_PC_IDRENAME = FIFO_out_ID_RENAME[96];
+    assign HasImmediate_IDRENAME = FIFO_out_ID_RENAME[97];
+    assign Immediate_IDRENAME = FIFO_out_ID_RENAME[129:98];
+    assign ReadRegisterA1_IDRENAME = FIFO_out_ID_RENAME[134:130];
+    assign ReadRegisterB1_IDRENAME = FIFO_out_ID_RENAME[139:135];
+    assign WriteRegister1_IDRENAME = FIFO_out_ID_RENAME[144:140];
+    assign MemWriteData1_IDRENAME = FIFO_out_ID_RENAME[176:145];
+    assign ALU_Control1_IDRENAME = FIFO_out_ID_RENAME[182:177];
+    assign RegWrite_IDRENAME = FIFO_out_ID_RENAME[183];
+    assign MemRead_IDRENAME = FIFO_out_ID_RENAME[184];
+    assign MemWrite_IDRENAME = FIFO_out_ID_RENAME[185];
+    assign ShiftAmount1_IDRENAME = FIFO_out_ID_RENAME[190:186];
+
+    // F-RAT
+    wire [`PROJ_LOG_PHYS-1:0] FRAT_ptrs [`PROJ_NUM_ARCH_REGS-1:0];
 
     RAT #(35, `PROJ_NUM_PHYS_REGS, "F-RAT") FRAT(
         .RESET(RESET),
@@ -390,11 +404,11 @@ module MIPS (
         .Instr1_addr(Instr_PC_IDRENAME),
         .Alt_PC(Alt_PC_IDRENAME),
         .Request_Alt_PC(Request_Alt_PC_IDRENAME),
-        .Immediate_IN(),
+        .HasImmediate_IN(HasImmediate_IDRENAME),
+        .Immediate_IN(Immediate_IDRENAME),
         .ReadRegisterA1_IN(ReadRegisterA1_IDRENAME),
         .ReadRegisterB1_IN(ReadRegisterB1_IDRENAME),
         .WriteRegister1_IN(WriteRegister1_IDRENAME),
-        .ALUSrc1(ALUSrc1_IDRENAME),
         .MemWriteData1_IN(MemWriteData1_IDRENAME),
         .ALU_Control1_IN(ALU_Control1_IDRENAME),
         .RegWrite_IN(RegWrite_IDRENAME),
@@ -634,11 +648,11 @@ module MIPS (
     RetireCommit RetireCommit(
         .CLK(CLK),
         .RESET(RESET),
-        .Arch_reg_IN(),
-        .Phys_reg_IN(),
-        .Update_IN(),
+        .ROB_entry_IN(),
+        .ROB_entry_invalid_IN(),
         .Flush_OUT(),
-        .RegPtrs_OUT()
+        .RegPtrs_OUT(),
+        .ROB_full_OUT()
     );
 `endif
 endmodule

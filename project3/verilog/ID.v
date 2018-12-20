@@ -65,7 +65,6 @@ module ID(
      //RegisterB passed to EXE
     output reg [4:0]ReadRegisterB1_OUT,
      //Destination Register passed to EXE
-    output reg ALUSrc,
     output reg [4:0]WriteRegister1_OUT,
      //Data to write to memory passed to EXE [for store]
      //output reg [31:0]MemWriteData1_OUT,
@@ -301,7 +300,6 @@ always @(posedge CLK or negedge RESET) begin
 		ReadRegisterA1_OUT <= 0;
 		ReadRegisterB1_OUT <= 0;
 		WriteRegister1_OUT <= 0;
-        ALUSrc <= 0;
 		//MemWriteData1_OUT <= 0;
 		RegWrite1_OUT <= 0;
 		ALU_Control1_OUT <= 0;
@@ -329,7 +327,6 @@ always @(posedge CLK or negedge RESET) begin
             ReadRegisterA1_OUT <= 0;
             ReadRegisterB1_OUT <= 0;
             WriteRegister1_OUT <= 0;
-            ALUSrc <= 0;
             //MemWriteData1_OUT <= 0;
             RegWrite1_OUT <= 0;
             ALU_Control1_OUT <= 0;
@@ -376,7 +373,6 @@ always @(posedge CLK or negedge RESET) begin
 					ReadRegisterA1_OUT <= 0;
 					ReadRegisterB1_OUT <= 0;
 					WriteRegister1_OUT <= 0;
-                    ALUSrc <= 0;
 					//MemWriteData1_OUT <= 0;
 					RegWrite1_OUT <= 0;
 					ALU_Control1_OUT <= (Instr1_IN==32'hc)?ALU_control1:0;
@@ -393,7 +389,6 @@ always @(posedge CLK or negedge RESET) begin
                     ReadRegisterA1_OUT <= RegA1;
                     ReadRegisterB1_OUT <= RegB1;
                     WriteRegister1_OUT <= WriteRegister1;
-                    ALUSrc <= ALUSrc1;
                     //MemWriteData1_OUT <= MemWriteData1;
                     RegWrite1_OUT <= (WriteRegister1!=5'd0)?RegWrite1:1'd0;
                     ALU_Control1_OUT <= ALU_control1;
