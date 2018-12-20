@@ -265,11 +265,9 @@ module ID(
 // 	//Otherwise, if we have writeregister==rd, then rt is used for OpB.
 // 	//if writeregister!=rd, then writeregister ==rt, and we use immediate instead.
 // 	assign OpB1 = branch1?(link1?(Instr_PC_Plus4_IN+4):rtval1):(RegDst1?rtval1:(sign_or_zero_Flag1?signExtended_immediate1:zeroExtended_immediate1));
-    HasImmediate_OUT = 0;
-    if (!RegDst1) begin
-        Immediate_OUT = (sign_or_zero_Flag1?signExtended_immediate1:zeroExtended_immediate1);
-        HasImmediate_OUT = 1;
-    end
+    assign HasImmediate_OUT = 0;
+    assign Immediate_OUT = RegDst1 == 0 ? (sign_or_zero_Flag1?signExtended_immediate1:zeroExtended_immediate1) : 0;
+    assign HasImmediate_OUT = RegDst1 == 0 ? 1 : 0;
     assign RegB1 = RegDst1?rt1:5'd0;
 	
 
@@ -300,8 +298,6 @@ always @(posedge CLK or negedge RESET) begin
 		Alt_PC <= 0;
 		Request_Alt_PC <= 0;
 		Instr1_OUT <= 0;
-		OperandA1_OUT <= 0;
-		OperandB1_OUT <= 0;
 		ReadRegisterA1_OUT <= 0;
 		ReadRegisterB1_OUT <= 0;
 		WriteRegister1_OUT <= 0;
@@ -330,8 +326,6 @@ always @(posedge CLK or negedge RESET) begin
             if (!Instr1_Valid_IN) begin
 		    $display("ID[FETCH_WAIT]");
             Instr1_OUT <= 0;
-            OperandA1_OUT <= 0;
-            OperandB1_OUT <= 0;
             ReadRegisterA1_OUT <= 0;
             ReadRegisterB1_OUT <= 0;
             WriteRegister1_OUT <= 0;
@@ -379,8 +373,6 @@ always @(posedge CLK or negedge RESET) begin
 				9,1: begin	//9 and 1 depend on multiple syscall in a row
 					//$display("ID:send nop");
 					Instr1_OUT <= (Instr1_IN==32'hc)?Instr1_IN:0; //We need to propagate the syscall to MEM to flush the cache!
-					OperandA1_OUT <= 0;
-					OperandB1_OUT <= 0;
 					ReadRegisterA1_OUT <= 0;
 					ReadRegisterB1_OUT <= 0;
 					WriteRegister1_OUT <= 0;

@@ -5,6 +5,7 @@
 
 module FreeList #(
     parameter NUM_PHYS_REGS = 64,
+    parameter LOG_PHYS = $clog2(NUM_PHYS_REGS)
 )
 (
     input CLK,
@@ -15,11 +16,11 @@ module FreeList #(
     output DequeueResult_OUT, // 0 = no dequeue request or dequeue failed, 1 = dequeue succeeded
     output reg [`LOG_PHYS - 1 : 0] Data_OUT
 );
-    reg [`LOG_PHYS - 1 : 0] queue [NUM_PHYS_REGS - 1 : 0];
-    reg head;
-    reg tail;
+    reg [`LOG_PHYS - 1 : 0] queue [NUM_PHYS_REGS - 1: 0];
+    reg [`LOG_PHYS:0] head;
+    reg [`LOG_PHYS:0] tail;
     reg full;
-    wire counter;
+    wire [31:0] counter;
 
     initial begin
         head = 0;
@@ -27,8 +28,8 @@ module FreeList #(
         full = 0;
         counter = 1;
         // Initialize queue. Enqueue all physical registers. 
-        while (counter < `LOG_PHYS) begin
-            queue[counter] = counter;
+        while (counter < LOG_PHYS) begin
+            queue[counter[`LOG_PHYS-1:0]] = counter[`LOG_PHYS-1:0];
             counter = counter + 1;
         end
     end
@@ -42,12 +43,11 @@ module FreeList #(
             counter = 1;
             // Initialize queue. Enqueue all physical registers. 
             while (counter < `LOG_PHYS) begin
-                queue[counter] = counter;
+                queue[counter[`LOG_PHYS-1:0]] = counter[`LOG_PHYS-1:0];
                 counter = counter + 1;
             end
             $display("Free List: RESET");
-        end
-        else
+        end else begin
             // Enqueue first so when the queue is empty and there are both enqueue request and dequeue request,
             // there will be free register to dequeue
             if (Enqueue_IN) begin
@@ -55,7 +55,7 @@ module FreeList #(
                 // the number of free registers should always be less than or equal to 
                 // the total number of registers
                 if (!full) begin
-                    queue[tail] = Data_IN;
+                    queue[tail[`LOG_PHYS-1:0]] = Data_IN;
                     tail = (tail + 1) % NUM_PHYS_REGS;
                     if (tail == head) begin
                         full = 1;
@@ -64,7 +64,7 @@ module FreeList #(
             end
             if (Dequeue_IN) begin
                 if (!(head == tail && full == 0)) begin // only dequeue when the queue is not empty
-                    Data_OUT = queue[head];
+                    Data_OUT = queue[head[`LOG_PHYS-1:0]];
                     head = (head + 1) % NUM_PHYS_REGS;
                     full = 0;
                     DequeueResult_OUT = 1;

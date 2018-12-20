@@ -219,6 +219,7 @@ module MIPS (
     assign FIFO_in_IF_ID = {Instr1_IFFIFO,Instr_PC_IFFIFO,Instr_PC_Plus4_IFFIFO};
 
     FIFO #(8, 96, "Fetch", "Decode") FIFO_IF_ID(
+        .CLK(CLK),
         .RESET(RESET),
         .in_data(FIFO_in_IF_ID),
         .pushing(Instr1_Available_IFFIFO),
@@ -253,8 +254,6 @@ module MIPS (
 		.Request_Alt_PC(Request_Alt_PC_IDIF),
 		.Instr1_OUT(Instr1_IDEXE),
         .Instr1_PC_OUT(Instr1_PC_IDEXE),
-		.OperandA1_OUT(OperandA1_IDEXE),
-		.OperandB1_OUT(OperandB1_IDEXE),
 `ifdef HAS_FORWARDING
 		.ReadRegisterA1_OUT(RegisterA1_IDEXE),
 		.ReadRegisterB1_OUT(RegisterB1_IDEXE),
@@ -265,7 +264,6 @@ module MIPS (
 /* verilator lint_on PINCONNECTEMPTY */
 `endif
 		.WriteRegister1_OUT(WriteRegister1_IDEXE),
-		.MemWriteData1_OUT(MemWriteData1_IDEXE),
 		.RegWrite1_OUT(RegWrite1_IDEXE),
 		.ALU_Control1_OUT(ALU_Control1_IDEXE),
 		.MemRead1_OUT(MemRead1_IDEXE),
@@ -304,9 +302,28 @@ module MIPS (
     wire [95:0] FIFO_out_ID_RENAME;
     wire        RENAME_wait_for_FIFO_pop;
 
+    // stuff from ID into RENAME
+    wire [31:0] Instr1_IDRENAME;
+    wire [31:0] Instr1_PC_IDRENAME;
+    wire [31:0] Instr_PC_Plus4_IDRENAME;
+    wire        Instr1_Available_IDRENAME;
+
+    wire [31:0] Alt_PC_IDRENAME;
+    wire        Request_Alt_PC_IDRENAME;
+    wire [4:0]  ReadRegisterA1_IDRENAME;
+    wire [4:0]  ReadRegisterB1_IDRENAME;
+    wire [4:0]  WriteRegister1_IDRENAME;
+    wire        ALUSrc1_IDRENAME;
+    wire [31:0] MemWriteData1_IDRENAME;
+    wire [4:0]  ALU_Control1_IDRENAME;
+    wire        RegWrite_IDRENAME;
+    wire        MemRead_IDRENAME;
+    wire        MemWrite_IDRENAME;
+    wire [4:0]  ShiftAmount1_IDRENAME;
+
     // stuff from F-RAT, free list, ROB, and queues going into RENAME
-    wire [`LOG_PHYS-1:0] Map_arch_to_phys [`NUM_ARCH_REGS-1:0];
-    wire [`LOG_PHYS-1:0] Free_phys_reg;
+    wire [`PROJ_LOG_PHYS-1:0] Map_arch_to_phys [`PROJ_NUM_ARCH_REGS-1:0];
+    wire [`PROJ_LOG_PHYS-1:0] Free_phys_reg;
     wire Free_reg_avail;
     wire ROB_full;
     wire Issue_queue_full;
@@ -321,16 +338,21 @@ module MIPS (
     wire Grabbed_regs_RENAME_FL;
     wire RENAME_blocked;
 
-    assign FIFO_in_ID_RENAME = {};  // TODO
+
+    // stuff from F-RAT to RENAME
+    wire [4:0] FRAT_ptrs [34:0];
+
+    // assign FIFO_in_ID_RENAME = {};  // TODO
 
     FIFO #(8, "Decode", "Rename") FIFO_DECODE_RENAME(
+        .CLK(CLK),
         .RESET(RESET),
         .in_data(FIFO_in_ID_RENAME),
         .pushing(Instr1_Available_IDFIFO),
         .popping(popping_RENAME),
         .push_must_wait(ID_wait_for_FIFO_push),
         .out_data(FIFO_out_ID_RENAME),
-        .pop_must_wait(RENAME_wait_for_FIFO_pop),
+        .pop_must_wait(RENAME_wait_for_FIFO_pop)
     );
 
     assign Instr1_IDRENAME = FIFO_out_ID_RENAME[95:64];
@@ -341,18 +363,24 @@ module MIPS (
     // stuff from ID
     assign Alt_PC_IDRENAME = FIFO_out_ID_RENAME[127:96];
     assign Request_Alt_PC_IDRENAME = FIFO_out_ID_RENAME[128];
-    assign OperandA1_IDRENAME = FIFO_out_ID_RENAME[160:129];
-    assign OperandB1_IDRENAME = FIFO_out_ID_RENAME[192:161];
-    assign ReadRegisterA1_IDRENAME = FIFO_out_ID_RENAME[224:193];
-    assign ReadRegisterB1_IDRENAME = FIFO_out_ID_RENAME[256:225];
-    assign WriteRegister1_IDRENAME = FIFO_out_ID_RENAME[261:257];
-    assign ALUSrc1_IDRENAME = FIFO_out_ID_RENAME[262];
-    assign MemWriteData1_IDRENAME = FIFO_out_ID_RENAME[294:263];
-    assign ALU_Control1_IDRENAME = FIFO_out_ID_RENAME[300:295];
-    assign RegWrite_IDRENAME = FIFO_out_ID_RENAME[301];
-    assign MemRead_IDRENAME = FIFO_out_ID_RENAME[302];
-    assign MemWrite_IDRENAME = FIFO_out_ID_RENAME[303];
-    assign ShiftAmount1_IDRENAME = FIFO_out_ID_RENAME[308:304];
+    assign ReadRegisterA1_IDRENAME = FIFO_out_ID_RENAME[125:121];
+    assign ReadRegisterB1_IDRENAME = FIFO_out_ID_RENAME[130:126];
+    assign WriteRegister1_IDRENAME = FIFO_out_ID_RENAME[135:131];
+    assign ALUSrc1_IDRENAME = FIFO_out_ID_RENAME[136];
+    assign MemWriteData1_IDRENAME = FIFO_out_ID_RENAME[168:137];
+    assign ALU_Control1_IDRENAME = FIFO_out_ID_RENAME[174:169];
+    assign RegWrite_IDRENAME = FIFO_out_ID_RENAME[175];
+    assign MemRead_IDRENAME = FIFO_out_ID_RENAME[176];
+    assign MemWrite_IDRENAME = FIFO_out_ID_RENAME[177];
+    assign ShiftAmount1_IDRENAME = FIFO_out_ID_RENAME[182:178];
+
+    RAT #(35, `PROJ_NUM_PHYS_REGS, "F-RAT") FRAT(
+        .RESET(RESET),
+        .Register_update_src(),
+        .Register_update_dst(),
+        .Write(),
+        .RegPtrs(FRAT_ptrs)
+    );
 
     RENAME RENAME(
         .CLK(CLK),
@@ -362,24 +390,24 @@ module MIPS (
         .Instr1_addr(Instr_PC_IDRENAME),
         .Alt_PC(Alt_PC_IDRENAME),
         .Request_Alt_PC(Request_Alt_PC_IDRENAME),
-        .OperandA1_IN(OperandA1_IDRENAME),
-        .OperandB1_IN(OperandB1_IDRENAME),
+        .Immediate_IN(),
         .ReadRegisterA1_IN(ReadRegisterA1_IDRENAME),
         .ReadRegisterB1_IN(ReadRegisterB1_IDRENAME),
         .WriteRegister1_IN(WriteRegister1_IDRENAME),
         .ALUSrc1(ALUSrc1_IDRENAME),
-        .MemWriteData1(MemWrite_IDRENAME),
+        .MemWriteData1_IN(MemWriteData1_IDRENAME),
         .ALU_Control1_IN(ALU_Control1_IDRENAME),
         .RegWrite_IN(RegWrite_IDRENAME),
-        .MemRead_IN(MemRead_IDRENAME),
-        .MemWrite_IN(MemWrite_IDRENAME),
+        .MemRead1_IN(MemRead_IDRENAME),
+        .MemWrite1_IN(MemWrite_IDRENAME),
         .ShiftAmount1_IN(ShiftAmount1_IDRENAME),
-        .Map_arch_to_phys(),
+        .Map_arch_to_phys(FRAT_ptrs),
         .Free_phys_reg(Free_phys_reg),
         .Free_reg_avail(Free_reg_avail),
+        .Busy_list(),
         .ROB_full(),
         .Issue_queue_full(),
-        .Load_store_queue_full(LSQ_full),
+        .Load_store_queue_full(Blocked_LSQ),
         .Issue_queue_entry(Entry_RENAME_IQ),
         .Issue_queue_entry_valid(Entry_valid_RENAME_IQ),
         .Load_store_queue_entry(Entry_RENAME_LSQ),
@@ -403,20 +431,23 @@ module MIPS (
         .IssueQueueEntry_OUT()
     );
 
-    LSQ #(`NUM_PHYS_REGS) LSQ(
+    // from LSQ to RENAME
+    wire Blocked_LSQ;
+    wire [`LOAD_STORE_QUEUE_ENTRY_BITS-1:0] Entry_LSQ_MEM;
+    wire Entry_valid_LSQ_MEM;
+
+    FIFO #(16, `LOAD_STORE_QUEUE_ENTRY_BITS, "RENAME", "LSQ") LSQ(
         .CLK(CLK),
         .RESET(RESET),
-        .FLUSH(),
-        .Enqueue_IN(Entry_valid_RENAME_LSQ),
-        .Entry_IN(Entry_RENAME_LSQ),
-        .Dequeue_IN(),
-        .Full_OUT(LSQ_full),
-        .DequeueResult_OUT(Entry_valid_LSQ),
-        .EnqueueResult(),   /* TODO */
-        .Data_OUT(Entry_LSQ)
+        .in_data(Entry_RENAME_LSQ),
+        .pushing(Entry_valid_RENAME_LSQ),
+        .popping(Popping_MEM_LSQ),
+        .push_must_wait(Blocked_LSQ),
+        .out_data(Entry_LSQ_MEM),
+        .pop_must_wait(Entry_valid_LSQ_MEM)
     );
 
-    FreeList #(`NUM_PHYS_REGS) FL(
+    FreeList #(`PROJ_NUM_PHYS_REGS) FL(
         .CLK(CLK),
         .RESET(RESET),
         .Enqueue_IN(Enqueue_entry_ROB_FL),
@@ -592,13 +623,22 @@ module MIPS (
         .RegWrite_IN(),
         .DataWrite_IN(),
         .Write_IN(),
+        .BusyReg_IN(),
+        .SetBusy_IN(),
+        .BusyValue_IN(),
         .RegValueA_OUT(),
         .RegValueB_OUT(),
-        .RegValueC_OUT()
+        .RegValueC_OUT(),
+        .Busy_list_OUT()
     );
     RetireCommit RetireCommit(
         .CLK(CLK),
-        .RESET(RESET)
+        .RESET(RESET),
+        .Arch_reg_IN(),
+        .Phys_reg_IN(),
+        .Update_IN(),
+        .Flush_OUT(),
+        .RegPtrs_OUT()
     );
 `endif
 endmodule

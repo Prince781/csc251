@@ -30,16 +30,16 @@
 //  RetireCommit.v
 `endif
 
-`define NUM_PHYS_REGS 64
-`define LOG_PHYS    $clog2(NUM_PHYS_REGS)
-`define NUM_ARCH_REGS 32
-`define LOG_ARCH    $clog2(NUM_ARCH_REGS)
+`define PROJ_NUM_PHYS_REGS 64
+`define PROJ_LOG_PHYS    $clog2(`PROJ_NUM_PHYS_REGS)
+`define PROJ_NUM_ARCH_REGS 32
+`define PROJ_LOG_ARCH    $clog2(`PROJ_NUM_ARCH_REGS)
 
 /* src1/src2 = ReadRegisterA1/ReadRegisterB1 */
 /* src1/src2 val = OperandA1/OperandB1 */
 /* anything in the issue queue has regwrite guaranteed */
-`define ISSUE_QUEUE_ENTRY_BITS (6 /* ALU op */ + `LOG_PHYS /* src1 reg */ + 32 /* src1 val */ + 1 /* src1 ready? */ + `LOG_PHYS /* src2 */ + 32 /* src2 val */ + 1 /* src2 ready? */ + 5 /* shift amount */ + 1 /* regwrite? */ +  `LOG_PHYS /* dest */ + 1 /* memwrite? */ + 1 /* memread? */ + 1 /* stall mem? */)
+`define ISSUE_QUEUE_ENTRY_BITS (6 /* ALU op */ + 1 /* has immediate? */ + 32 /* immediate */ + `PROJ_LOG_PHYS /* src1 reg */ + 1 /* src1 ready? */ + `PROJ_LOG_PHYS /* src2 */ + 1 /* src2 ready? */ + 5 /* shift amount */ + 1 /* regwrite? */ +  `PROJ_LOG_PHYS /* dest */ + 1 /* memwrite? */ + 1 /* memread? */)
 
-`define LOAD_STORE_QUEUE_ENTRY_BITS (1 /* 0 = load, 1 = store */ + 1 /* ready? */ + `LOG_PHYS /* dest/src */ + 32 /* addr */)
+`define LOAD_STORE_QUEUE_ENTRY_BITS (1 /* 0 = load, 1 = store */ + 1 /* ready? */ + `PROJ_LOG_PHYS /* dest/src */ + 32 /* addr */)
 
-`define ROB_ENTRY_BITS (1 /* executed? */ + 32 /*instr*/ + 32 /* addr */ + 32 /* alt_pc */ + 1 /* request alt_pc? */ + 1 /* write to R-RAT? */ + `LOG_PHYS /* phys register */ + `LOG_ARCH /* arch register */ /* +  ??? */)
+`define ROB_ENTRY_BITS (1 /* executed? */ + 32 /*instr*/ + 32 /* addr */ + 32 /* alt_pc */ + 1 /* request alt_pc? */ + 1 /* write to R-RAT? */ + `PROJ_LOG_PHYS /* phys register */ + `PROJ_LOG_ARCH /* arch register */ /* +  ??? */)

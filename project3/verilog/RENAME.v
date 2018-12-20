@@ -1,4 +1,5 @@
 `include "config.v"
+
 module RENAME
 (
     input CLK,
@@ -13,8 +14,7 @@ module RENAME
     input Request_Alt_PC,
 
     // stuff from Decode stage
-    input [31:0] OperandA1_IN,
-    input [31:0] OperandB1_IN,
+    input [31:0] Immediate_IN,
     input [4:0] ReadRegisterA1_IN,
     input [4:0] ReadRegisterB1_IN,
     input [4:0] WriteRegister1_IN,
@@ -22,14 +22,15 @@ module RENAME
     input [31:0] MemWriteData1_IN,
     input [5:0] ALU_Control1_IN,
     input RegWrite_IN,
-    input MemRead_IN,                       // if 1, instr belongs in load/store queue
-    input MemWrite_IN,                      // if 1, instr belongs in store/store queue
+    input MemRead1_IN,                      // if 1, instr belongs in load/store queue
+    input MemWrite1_IN,                     // if 1, instr belongs in store/store queue
     input [4:0] ShiftAmount1_IN,
 
-    // stuff from F-RAT, free list, ROB, and queues
-    input [`LOG_PHYS-1:0] Map_arch_to_phys [`NUM_ARCH_REGS-1:0],
-    input [`LOG_PHYS-1:0] Free_phys_reg;
-    input Free_reg_avail;
+    // stuff from F-RAT, free list, reg file, ROB, and queues
+    input [`PROJ_LOG_PHYS-1:0] Map_arch_to_phys [`PROJ_NUM_ARCH_REGS-1:0],
+    input [`PROJ_LOG_PHYS-1:0] Free_phys_reg,
+    input Free_reg_avail,
+    input [`PROJ_NUM_ARCH_REGS-1:0] Busy_list,
     input ROB_full,
     input Issue_queue_full,
     input Load_store_queue_full,
@@ -45,7 +46,7 @@ module RENAME
     output Blocked                          // whether the Rename stage can proceed
 );
 
-wire num_needed_regs = !!WriteRegister1_IN;
+wire num_needed_regs = WriteRegister1_IN != 0;
 
 always @(posedge CLK or negedge RESET) begin
     Blocked = 0;
@@ -71,56 +72,59 @@ always @(posedge CLK or negedge RESET) begin
         if (Free_reg_avail < num_needed_regs) begin
             $display("RENAME: blocked while waiting for free registers.");
             Blocked = 1;
-        else if (Issue_queue_full) begin
+        end else if (Issue_queue_full) begin
             $display("RENAME: blocked while issue queue is full.");
             Blocked = 1;
         end else begin      // we have the registers, and our place in the ROB, but what about the issue queue/LS queue?
-            if (MemRead_IN) begin       // we are a ld
+            if (MemRead1_IN) begin       // we are a ld
                 if (Load_store_queue_full) begin
                     $display("RENAME: blocked waiting for LS queue.");
                     Blocked = 1;
                 end else begin      // we're good to go; we should only need one reg
-                    Load_store_queue_entry = {0,0,Free_phys_reg,0};
+                    Load_store_queue_entry = {1'b0,1'b0,Free_phys_reg,32'd0};
                     Load_store_queue_entry_valid = 1;
                 end
             end
-            if (!MemRead_IN || !Load_store_queue_full) begin
+            if (!MemRead1_IN || !Load_store_queue_full) begin
                 Issue_queue_entry = {ALU_Control1_IN, 
-                    !ReadRegisterA1_IN ? 0 : Map_arch_to_phys[ReadRegisterA1_IN], OperandA1_IN, ALUSrc1 | (!ReadRegisterA1_IN & !Busy_list[ReadRegisterA1_IN]), 
-                    !ReadRegisterB1_IN ? 0 : Map_arch_to_phys[ReadRegisterB1_IN], OperandB1_IN, ALUSrc1 | (!ReadRegisterB1_IN & !Busy_list[ReadRegisterB1_IN]),
+                    ALUSrc1, Immediate_IN,
+                    ReadRegisterA1_IN == 0 ? 6'd0 : Map_arch_to_phys[ReadRegisterA1_IN], ALUSrc1 | (ReadRegisterA1_IN == 0 && Busy_list[ReadRegisterA1_IN] == 0), 
+                    ReadRegisterB1_IN == 0? 6'd0 : Map_arch_to_phys[ReadRegisterB1_IN], ALUSrc1 | (ReadRegisterB1_IN == 0 && Busy_list[ReadRegisterB1_IN] == 0),
                     ShiftAmount1_IN,
-                    1, Free_phys_reg,
+                    1'b1, Free_phys_reg,
                     MemWrite1_IN, MemRead1_IN};
                 Issue_queue_entry_valid = 1;
                 Grabbed_regs = num_needed_regs;
-                ROB_entry = {0, Instr1_IN, Instr1_addr, Alt_PC, Request_Alt_PC, 1, Free_phys_reg, WriteRegister1_IN};
+                ROB_entry = {1'b0, Instr1_IN, Instr1_addr, Alt_PC, Request_Alt_PC, 1'b1, Free_phys_reg, WriteRegister1_IN};
             end
         end
-    end else if (MemWrite_IN) begin     // this instruction stores to memory
+    end else if (MemWrite1_IN) begin     // this instruction stores to memory
         if (Issue_queue_full) begin
             $display("RENAME: blocked while issue queue is full.");
             Blocked = 1;
         end else begin
-            Load_store_queue_entry = {1,0,!ReadRegisterA1_IN ? 0 : Map_arch_to_phys[ReadRegisterA1_IN],0};
+            Load_store_queue_entry = {1'b1,1'b0,ReadRegisterA1_IN == 0 ? 6'd0 : Map_arch_to_phys[ReadRegisterA1_IN],32'd0};
             Load_store_queue_entry_valid = 1;
             Issue_queue_entry = {ALU_Control1_IN, 
-                !ReadRegisterA1_IN ? 0 : Map_arch_to_phys[ReadRegisterA1_IN], OperandA1_IN, ALUSrc1 | (!ReadRegisterA1_IN & !Busy_list[ReadRegisterA1_IN]), 
-                !ReadRegisterB1_IN ? 0 : Map_arch_to_phys[ReadRegisterB1_IN], OperandB1_IN, ALUSrc1 | (!ReadRegisterB1_IN & !Busy_list[ReadRegisterB1_IN]),
+                ALUSrc1, Immediate_IN,
+                ReadRegisterA1_IN == 0 ? 6'd0 : Map_arch_to_phys[ReadRegisterA1_IN], ALUSrc1 | (ReadRegisterA1_IN == 0&& Busy_list[ReadRegisterA1_IN] == 0), 
+                ReadRegisterB1_IN == 0? 6'd0 : Map_arch_to_phys[ReadRegisterB1_IN], ALUSrc1 | (ReadRegisterB1_IN == 0 && Busy_list[ReadRegisterB1_IN] == 0),
                 ShiftAmount1_IN,
-                0, 0,
-                MemWrite_IN, MemRead_IN};
+                6'd0, 1'b0,
+                MemWrite1_IN, MemRead1_IN};
             Issue_queue_entry_valid = 1;
         end
     end else begin                      // this instruction is something else, like a branch or jump
         Issue_queue_entry = {ALU_Control1_IN, 
-            !ReadRegisterA1_IN ? 0 : Map_arch_to_phys[ReadRegisterA1_IN], OperandA1_IN, ALUSrc1 | (!ReadRegisterA1_IN & !Busy_list[ReadRegisterA1_IN]), 
-            !ReadRegisterB1_IN ? 0 : Map_arch_to_phys[ReadRegisterB1_IN], OperandB1_IN, ALUSrc1 | (!ReadRegisterB1_IN & !Busy_list[ReadRegisterB1_IN]),
+            ALUSrc1, Immediate_IN,
+            ReadRegisterA1_IN == 0? 6'd0 : Map_arch_to_phys[ReadRegisterA1_IN], ALUSrc1 | (ReadRegisterA1_IN == 0 && Busy_list[ReadRegisterA1_IN] == 0), 
+            ReadRegisterB1_IN == 0? 6'd0 : Map_arch_to_phys[ReadRegisterB1_IN], ALUSrc1 | (ReadRegisterB1_IN == 0 && Busy_list[ReadRegisterB1_IN] == 0),
             ShiftAmount1_IN,
-            0, 0,
-            MemWrite_IN, MemRead_IN};
+            1'b0, 6'd0,
+            MemWrite1_IN, MemRead1_IN};
         Issue_queue_entry_valid = 1;
         Grabbed_regs = num_needed_regs;
-        ROB_entry = {0, Instr1_IN, Instr1_addr, Alt_PC, Request_Alt_PC, 0, 0, WriteRegister1_IN};
+        ROB_entry = {1'b0, Instr1_IN, Instr1_addr, Alt_PC, Request_Alt_PC, 1'b0, 6'd0, WriteRegister1_IN};
     end
 end
 
