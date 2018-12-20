@@ -53,9 +53,13 @@ module ID(
     //PC of instruction being passed to EXE [debug]
      output reg [31:0]Instr1_PC_OUT,
      //OperandA passed to EXE
-    output reg [31:0]OperandA1_OUT,
+    //output reg [31:0]OperandA1_OUT,
      //OperandB passed to EXE
-    output reg [31:0]OperandB1_OUT,
+    //output reg [31:0]OperandB1_OUT,
+    
+    // If this instruction has immediate, pass to RENAME
+    output HasImmediate_OUT, // 0 = no immediate, 1 = has immediate
+    output reg [31:0] Immediate_OUT,
      //RegisterA passed to EXE
     output reg [4:0]ReadRegisterA1_OUT,
      //RegisterB passed to EXE
@@ -64,7 +68,7 @@ module ID(
     output reg ALUSrc,
     output reg [4:0]WriteRegister1_OUT,
      //Data to write to memory passed to EXE [for store]
-     output reg [31:0]MemWriteData1_OUT,
+     //output reg [31:0]MemWriteData1_OUT,
      //we'll be writing to a register... passed to EXE
     output reg RegWrite1_OUT,
     //ALU control passed to EXE
@@ -121,16 +125,16 @@ module ID(
 	 wire [4:0]		RegB1;		//Register B
 	 wire [4:0]		WriteRegister1;	//Register to write
 	 wire [31:0]	WriteRegisterRawVal1;
-	 wire [31:0]	MemWriteData1;		//Data to write to memory
-	 wire	[31:0]	OpA1;		//Operand A
-	 wire [31:0]	OpB1;		//Operand B
+	 //wire [31:0]	MemWriteData1;		//Data to write to memory
+	 //wire	[31:0]	OpA1;		//Operand A
+	 //wire [31:0]	OpB1;		//Operand B
 	 
      wire [4:0]     rs1;     //also format1
-     wire [31:0]    rsRawVal1;
-     wire   [31:0]  rsval1;
+     //wire [31:0]    rsRawVal1;
+     //wire   [31:0]  rsval1;
      wire   [4:0]       rt1;
-     wire [31:0]    rtRawVal1;
-     wire   [31:0]  rtval1;
+     //wire [31:0]    rtRawVal1;
+     //wire   [31:0]  rtval1;
      wire [4:0]     rd1;
      wire [4:0]     shiftAmount1;
      wire [15:0]    immediate1;
@@ -147,136 +151,141 @@ module ID(
 
 //Begin branch/jump calculation
 	
-	wire [31:0] rsval_jump1;
+// 	wire [31:0] rsval_jump1;
 	
-`ifdef HAS_FORWARDING
-RegValue3 RegJumpValue1 (
-    .ReadRegister1(rs1), 
-    .RegisterData1(rsRawVal1), 
-    .WriteRegister1stPri1(BypassReg1_EXEID), 
-    .WriteData1stPri1(BypassData1_EXEID),
-	 .Valid1stPri1(BypassValid1_EXEID),
-    .WriteRegister2ndPri1(BypassReg1_MEMID), 
-    .WriteData2ndPri1(BypassData1_MEMID),
-	 .Valid2ndPri1(BypassValid1_MEMID),
-    .WriteRegister3rdPri1(WriteRegister1_IN), 
-    .WriteData3rdPri1(WriteData1_IN),
-	 .Valid3rdPri1(RegWrite1_IN),
-    .Output1(rsval_jump1),
-	 .comment(1'b0)
-    );
-`else
-    assign rsval_jump1 = rsRawVal1;
-`endif
+// `ifdef HAS_FORWARDING
+// RegValue3 RegJumpValue1 (
+//     .ReadRegister1(rs1), 
+//     .RegisterData1(rsRawVal1), 
+//     .WriteRegister1stPri1(BypassReg1_EXEID), 
+//     .WriteData1stPri1(BypassData1_EXEID),
+// 	 .Valid1stPri1(BypassValid1_EXEID),
+//     .WriteRegister2ndPri1(BypassReg1_MEMID), 
+//     .WriteData2ndPri1(BypassData1_MEMID),
+// 	 .Valid2ndPri1(BypassValid1_MEMID),
+//     .WriteRegister3rdPri1(WriteRegister1_IN), 
+//     .WriteData3rdPri1(WriteData1_IN),
+// 	 .Valid3rdPri1(RegWrite1_IN),
+//     .Output1(rsval_jump1),
+// 	 .comment(1'b0)
+//     );
+// `else
+//     assign rsval_jump1 = rsRawVal1;
+// `endif
 
-NextInstructionCalculator NIA1 (
-    .Instr_PC_Plus4(Instr_PC_Plus4_IN),
-    .Instruction(Instr1_IN), 
-    .Jump(jump1), 
-    .JumpRegister(jumpRegister_Flag1), 
-    .RegisterValue(rsval_jump1), 
-    .NextInstructionAddress(Alt_PC1),
-	 .Register(rs1)
-    );
+// NextInstructionCalculator NIA1 (
+//     .Instr_PC_Plus4(Instr_PC_Plus4_IN),
+//     .Instruction(Instr1_IN), 
+//     .Jump(jump1), 
+//     .JumpRegister(jumpRegister_Flag1), 
+//     .RegisterValue(rsval_jump1), 
+//     .NextInstructionAddress(Alt_PC1),
+// 	 .Register(rs1)
+//     );
 
-     wire [31:0]    signExtended_immediate1;
-     wire [31:0]    zeroExtended_immediate1;
+      wire [31:0]    signExtended_immediate1;
+      wire [31:0]    zeroExtended_immediate1;
      
-     assign signExtended_immediate1 = {{16{immediate1[15]}},immediate1};
-     assign zeroExtended_immediate1 = {{16{1'b0}},immediate1};
+      assign signExtended_immediate1 = {{16{immediate1[15]}},immediate1};
+      assign zeroExtended_immediate1 = {{16{1'b0}},immediate1};
 
-compare branch_compare1 (
-    .Jump(jump1), 
-    .OpA(OpA1),
-    .OpB(OpB1),
-    .Instr_input(Instr1_IN), 
-    .taken(Request_Alt_PC1)
-    );
+// compare branch_compare1 (
+//     .Jump(jump1), 
+//     .OpA(OpA1),
+//     .OpB(OpB1),
+//     .Instr_input(Instr1_IN), 
+//     .taken(Request_Alt_PC1)
+//     );
 //End branch/jump calculation
 
 //Handle pipelining
-`ifdef HAS_FORWARDING
-RegValue3 RegAValue1 (
-    .ReadRegister1(rs1), 
-    .RegisterData1(rsRawVal1), 
-    .WriteRegister1stPri1(BypassReg1_EXEID), 
-    .WriteData1stPri1(BypassData1_EXEID),
-	 .Valid1stPri1(BypassValid1_EXEID),
-    .WriteRegister2ndPri1(BypassReg1_MEMID), 
-    .WriteData2ndPri1(BypassData1_MEMID),
-	 .Valid2ndPri1(BypassValid1_MEMID),
-    .WriteRegister3rdPri1(WriteRegister1_IN), 
-    .WriteData3rdPri1(WriteData1_IN),
-	 .Valid3rdPri1(RegWrite1_IN),
-    .Output1(rsval1),
-	 .comment(1'b0)
-    );
-RegValue3 RegBValue1 (
-    .ReadRegister1(rt1), 
-    .RegisterData1(rtRawVal1), 
-    .WriteRegister1stPri1(BypassReg1_EXEID), 
-    .WriteData1stPri1(BypassData1_EXEID),
-     .Valid1stPri1(BypassValid1_EXEID),
-    .WriteRegister2ndPri1(BypassReg1_MEMID), 
-    .WriteData2ndPri1(BypassData1_MEMID),
-     .Valid2ndPri1(BypassValid1_MEMID),
-    .WriteRegister3rdPri1(WriteRegister1_IN), 
-    .WriteData3rdPri1(WriteData1_IN),
-     .Valid3rdPri1(RegWrite1_IN),
-    .Output1(rtval1),
-	 .comment(1'b0)
-    );
-`else
-assign rsval1 = rsRawVal1;
-assign rtval1 = rtRawVal1;
-`endif
+// `ifdef HAS_FORWARDING
+// RegValue3 RegAValue1 (
+//     .ReadRegister1(rs1), 
+//     .RegisterData1(rsRawVal1), 
+//     .WriteRegister1stPri1(BypassReg1_EXEID), 
+//     .WriteData1stPri1(BypassData1_EXEID),
+// 	 .Valid1stPri1(BypassValid1_EXEID),
+//     .WriteRegister2ndPri1(BypassReg1_MEMID), 
+//     .WriteData2ndPri1(BypassData1_MEMID),
+// 	 .Valid2ndPri1(BypassValid1_MEMID),
+//     .WriteRegister3rdPri1(WriteRegister1_IN), 
+//     .WriteData3rdPri1(WriteData1_IN),
+// 	 .Valid3rdPri1(RegWrite1_IN),
+//     .Output1(rsval1),
+// 	 .comment(1'b0)
+//     );
+// RegValue3 RegBValue1 (
+//     .ReadRegister1(rt1), 
+//     .RegisterData1(rtRawVal1), 
+//     .WriteRegister1stPri1(BypassReg1_EXEID), 
+//     .WriteData1stPri1(BypassData1_EXEID),
+//      .Valid1stPri1(BypassValid1_EXEID),
+//     .WriteRegister2ndPri1(BypassReg1_MEMID), 
+//     .WriteData2ndPri1(BypassData1_MEMID),
+//      .Valid2ndPri1(BypassValid1_MEMID),
+//     .WriteRegister3rdPri1(WriteRegister1_IN), 
+//     .WriteData3rdPri1(WriteData1_IN),
+//      .Valid3rdPri1(RegWrite1_IN),
+//     .Output1(rtval1),
+// 	 .comment(1'b0)
+//     );
+// `else
+// assign rsval1 = rsRawVal1;
+// assign rtval1 = rtRawVal1;
+// `endif
 
 
-	assign WriteRegister1 = RegDst1?rd1:(link1?5'd31:rt1);
-	//assign MemWriteData1 = Reg[WriteRegister1];		//What will be written by MEM
-`ifdef HAS_FORWARDING
-RegValue3 RegWriteValue1 (
-    .ReadRegister1(WriteRegister1), 
-    .RegisterData1(WriteRegisterRawVal1), 
-    .WriteRegister1stPri1(BypassReg1_EXEID), 
-    .WriteData1stPri1(BypassData1_EXEID),
-	 .Valid1stPri1(BypassValid1_EXEID),
-    .WriteRegister2ndPri1(BypassReg1_MEMID), 
-    .WriteData2ndPri1(BypassData1_MEMID),
-	 .Valid2ndPri1(BypassValid1_MEMID),
-    .WriteRegister3rdPri1(WriteRegister1_IN), 
-    .WriteData3rdPri1(WriteData1_IN),
-	 .Valid3rdPri1(RegWrite1_IN),
-    .Output1(MemWriteData1),
-	 .comment(1'b0)
-    );
-`else
-    assign MemWriteData1 = WriteRegisterRawVal1;
-`endif
+ 	assign WriteRegister1 = RegDst1?rd1:(link1?5'd31:rt1);
+// 	//assign MemWriteData1 = Reg[WriteRegister1];		//What will be written by MEM
+// `ifdef HAS_FORWARDING
+// RegValue3 RegWriteValue1 (
+//     .ReadRegister1(WriteRegister1), 
+//     .RegisterData1(WriteRegisterRawVal1), 
+//     .WriteRegister1stPri1(BypassReg1_EXEID), 
+//     .WriteData1stPri1(BypassData1_EXEID),
+// 	 .Valid1stPri1(BypassValid1_EXEID),
+//     .WriteRegister2ndPri1(BypassReg1_MEMID), 
+//     .WriteData2ndPri1(BypassData1_MEMID),
+// 	 .Valid2ndPri1(BypassValid1_MEMID),
+//     .WriteRegister3rdPri1(WriteRegister1_IN), 
+//     .WriteData3rdPri1(WriteData1_IN),
+// 	 .Valid3rdPri1(RegWrite1_IN),
+//     .Output1(MemWriteData1),
+// 	 .comment(1'b0)
+//     );
+// `else
+//     assign MemWriteData1 = WriteRegisterRawVal1;
+// `endif
 
-	//OpA will always be rsval, although it might be unused.
-	assign OpA1 = link1?0:rsval1;
-	assign RegA1 = link1?5'b00000:rs1;
-	//When we branch/jump and link, OpB needs to store return address
-	//Otherwise, if we have writeregister==rd, then rt is used for OpB.
-	//if writeregister!=rd, then writeregister ==rt, and we use immediate instead.
-	assign OpB1 = branch1?(link1?(Instr_PC_Plus4_IN+4):rtval1):(RegDst1?rtval1:(sign_or_zero_Flag1?signExtended_immediate1:zeroExtended_immediate1));
-	assign RegB1 = RegDst1?rt1:5'd0;
+// 	//OpA will always be rsval, although it might be unused.
+// 	assign OpA1 = link1?0:rsval1;
+ 	assign RegA1 = link1?5'b00000:rs1;
+// 	//When we branch/jump and link, OpB needs to store return address
+// 	//Otherwise, if we have writeregister==rd, then rt is used for OpB.
+// 	//if writeregister!=rd, then writeregister ==rt, and we use immediate instead.
+// 	assign OpB1 = branch1?(link1?(Instr_PC_Plus4_IN+4):rtval1):(RegDst1?rtval1:(sign_or_zero_Flag1?signExtended_immediate1:zeroExtended_immediate1));
+    HasImmediate_OUT = 0;
+    if (!RegDst1) begin
+        Immediate_OUT = (sign_or_zero_Flag1?signExtended_immediate1:zeroExtended_immediate1);
+        HasImmediate_OUT = 1;
+    end
+    assign RegB1 = RegDst1?rt1:5'd0;
 	
 
-RegFile RegFile (
-    .CLK(CLK), 
-    .RESET(RESET), 
-    .RegA1(rs1),
-    .RegB1(rt1),
-    .RegC1(WriteRegister1), 
-    .DataA1(rsRawVal1),
-    .DataB1(rtRawVal1),
-    .DataC1(WriteRegisterRawVal1),
-    .WriteReg1(WriteRegister1_IN),
-    .WriteData1(WriteData1_IN),
-    .Write1(RegWrite1_IN)
-    );
+// RegFile RegFile (
+//     .CLK(CLK), 
+//     .RESET(RESET), 
+//     .RegA1(rs1),
+//     .RegB1(rt1),
+//     .RegC1(WriteRegister1), 
+//     .DataA1(rsRawVal1),
+//     .DataB1(rtRawVal1),
+//     .DataC1(WriteRegisterRawVal1),
+//     .WriteReg1(WriteRegister1_IN),
+//     .WriteData1(WriteData1_IN),
+//     .Write1(RegWrite1_IN)
+//     );
 	 
 	 reg FORCE_FREEZE;
 	 reg INHIBIT_FREEZE;
@@ -297,7 +306,7 @@ always @(posedge CLK or negedge RESET) begin
 		ReadRegisterB1_OUT <= 0;
 		WriteRegister1_OUT <= 0;
         ALUSrc <= 0;
-		MemWriteData1_OUT <= 0;
+		//MemWriteData1_OUT <= 0;
 		RegWrite1_OUT <= 0;
 		ALU_Control1_OUT <= 0;
 		MemRead1_OUT <= 0;
@@ -327,7 +336,7 @@ always @(posedge CLK or negedge RESET) begin
             ReadRegisterB1_OUT <= 0;
             WriteRegister1_OUT <= 0;
             ALUSrc <= 0;
-            MemWriteData1_OUT <= 0;
+            //MemWriteData1_OUT <= 0;
             RegWrite1_OUT <= 0;
             ALU_Control1_OUT <= 0;
             MemRead1_OUT <= 0;
@@ -376,7 +385,7 @@ always @(posedge CLK or negedge RESET) begin
 					ReadRegisterB1_OUT <= 0;
 					WriteRegister1_OUT <= 0;
                     ALUSrc <= 0;
-					MemWriteData1_OUT <= 0;
+					//MemWriteData1_OUT <= 0;
 					RegWrite1_OUT <= 0;
 					ALU_Control1_OUT <= (Instr1_IN==32'hc)?ALU_control1:0;
 					MemRead1_OUT <= 0;
@@ -387,13 +396,13 @@ always @(posedge CLK or negedge RESET) begin
 				0: begin
 					//$display("ID: send instr");
                     Instr1_OUT <= Instr1_IN;
-                    OperandA1_OUT <= OpA1;
-                    OperandB1_OUT <= OpB1;
+                    //OperandA1_OUT <= OpA1;
+                    //OperandB1_OUT <= OpB1;
                     ReadRegisterA1_OUT <= RegA1;
                     ReadRegisterB1_OUT <= RegB1;
                     WriteRegister1_OUT <= WriteRegister1;
                     ALUSrc <= ALUSrc1;
-                    MemWriteData1_OUT <= MemWriteData1;
+                    //MemWriteData1_OUT <= MemWriteData1;
                     RegWrite1_OUT <= (WriteRegister1!=5'd0)?RegWrite1:1'd0;
                     ALU_Control1_OUT <= ALU_control1;
                     MemRead1_OUT <= MemRead1;

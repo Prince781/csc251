@@ -380,13 +380,27 @@ module MIPS (
         .ROB_full(),
         .Issue_queue_full(),
         .Load_store_queue_full(LSQ_full),
-        .Issue_queue_entry(),
-        .Issue_queue_entry_valid(),
-        .Load_store_queue_entry(),
-        .Load_store_queue_entry_valid(),
+        .Issue_queue_entry(Entry_RENAME_IQ),
+        .Issue_queue_entry_valid(Entry_valid_RENAME_IQ),
+        .Load_store_queue_entry(Entry_RENAME_LSQ),
+        .Load_store_queue_entry_valid(Entry_valid_RENAME_LSQ),
         .ROB_entry(),
         .Grabbed_regs(),
         .Blocked(RENAME_blocked)
+    );
+
+    IssueQueue IQ(
+        .CLK(CLK),
+        .RESET(RESET),
+        .Enqueue_IN(Entry_valid_RENAME_IQ),
+        .ReadyUpdate_IN(),
+        .ReadyRegister_IN(),
+        .IssueQueueEntry_IN(Entry_RENAME_IQ),
+        .Dequeue_IN(),
+        .DequeueResult_OUT(),
+        .EnqueueResult_OUT(),
+        .Full_OUT(),
+        .IssueQueueEntry_OUT()
     );
 
     LSQ #(`NUM_PHYS_REGS) LSQ(
@@ -570,6 +584,17 @@ module MIPS (
     
 `ifdef OUT_OF_ORDER
     RegRead RegRead(
+        .CLK(CLK),
+        .RESET(RESET),
+        .RegAddrA_IN(),
+        .RegAddrB_IN(),
+        .RegAddrC_IN(),
+        .RegWrite_IN(),
+        .DataWrite_IN(),
+        .Write_IN(),
+        .RegValueA_OUT(),
+        .RegValueB_OUT(),
+        .RegValueC_OUT()
     );
     RetireCommit RetireCommit(
         .CLK(CLK),
