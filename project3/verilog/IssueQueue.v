@@ -21,26 +21,25 @@ module IssueQueue #(
     output Full_OUT, // 0 = issue queue is not full, 1 = full
     output reg [`ISSUE_QUEUE_ENTRY_BITS - 1 : 0] IssueQueueEntry_OUT
 );
-    reg [`ISSUE_QUEUE_ENTRY_BITS - 1 : 0] queue [QUEUE_SIZE - 1 : 0];
+    reg [`ISSUE_QUEUE_ENTRY_BITS - 1 : 0] queue [QUEUE_SIZE : 0];
     reg ready_bits [QUEUE_SIZE];
-    reg [`LOG_SIZE - 1 : 0] tail;
-    reg [QUEUE_SIZE - 1 : 0] full;
-    wire [`LOG_SIZE:0] counter; // I'm not sure if it should be reg or wire
+    reg [`LOG_SIZE: 0] tail;
+    reg full;
+    reg [`LOG_SIZE:0] counter; // I'm not sure if it should be reg or wire
     reg [`ISSUE_QUEUE_ENTRY_BITS - 1:0] entry_selected;
 
     // Structure of issue queue entry
-    wire stall;
     wire memread;
     wire memwrite;
     wire [`LOG_PHYS - 1:0] dest;
     wire regwrite;
     wire [4:0] shift;
     wire src2ready;
-    wire [31:0] src2val;
     wire [`LOG_PHYS - 1:0] src2;
     wire src1ready;
-    wire [31:0] src1val;
     wire [`LOG_PHYS - 1:0] src1;
+    wire [31:0] immediate;
+    wire has_immediate;
     wire [5:0] op;
 
 
@@ -48,8 +47,9 @@ module IssueQueue #(
         tail = 0;
         full = 0;
         counter = 0;
-        while (counter < QUEUE_SIZE) begin
+        while (counter <= QUEUE_SIZE) begin
             ready_bits[counter[3:0]] = 0;
+            counter = counter + 1;
         end
     end
 
@@ -62,18 +62,18 @@ module IssueQueue #(
             counter = 0;
             while (counter < QUEUE_SIZE) begin
                 ready_bits[counter[3:0]] = 0;
+                counter = counter + 1;
             end
             $display("Issue Queue: RESET");
         end
         else begin
             // Update, dequeue, then enqueue to make sure that register ready bit is updated before select phase 
-            // `define ISSUE_QUEUE_ENTRY_BITS (6 /* ALU op */ + `LOG_PHYS /* src1 reg */ + 32 /* src1 val */ + 1 /* src1 ready? */ + `LOG_PHYS /* src2 */ + 32 /* src2 val */ + 1 /* src2 ready? */ + 5 /* shift amount */ + 1 /* regwrite? */ +  `LOG_PHYS /* dest */ + 1 /* memwrite? */ + 1 /* memread? */ + 1 /* stall mem? */)
-            
+            //`define ISSUE_QUEUE_ENTRY_BITS (6 /* ALU op */ + 1 /* has immediate? */ + 32 /* immediate */ + `PROJ_LOG_PHYS /* src1 reg */ + 1 /* src1 ready? */ + `PROJ_LOG_PHYS /* src2 */ + 1 /* src2 ready? */ + 5 /* shift amount */ + 1 /* regwrite? */ +  `PROJ_LOG_PHYS /* dest */ + 1 /* memwrite? */ + 1 /* memread? */)            
             // WAKE_UP
             if (ReadyUpdate_IN) begin
                 counter = 0;
                 while (counter != tail) begin
-                    {op, src1, src1val, src1ready, src2, src2val, src2ready, shift, regwrite, dest, memwrite, memread, stall} = queue[counter];
+                    {op, has_immediate, immediate, src1, src1ready, src2, src2ready, shift, regwrite, dest, memwrite, memread} = queue[counter];
                     if (src1 == ReadyRegister_IN) begin
                         src1ready = 1;
                     end
@@ -99,7 +99,7 @@ module IssueQueue #(
                         queue[counter] = queue[(counter + 1) % QUEUE_SIZE];
                         ready_bits[counter[3:0]] = ready_bits[(counter + 1) % QUEUE_SIZE];
                     end
-                    ready_bits[tail] = 0;
+                    ready_bits[tail[`LOG_SIZE - 1:0]] = 0;
                     tail = tail - 1;
                     full = 0;
                     DequeueResult_OUT = 1;
