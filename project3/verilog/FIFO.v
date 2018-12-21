@@ -38,7 +38,7 @@ always @(posedge CLK or negedge RESET) begin
     if (!RESET) begin
         push_must_wait <= 0;
         out_data <= 0;
-        pop_must_wait <= 0;
+        pop_must_wait <= 1;
         head <= tail;
         $display("FIFO %s -> %s RESET", FROM, TO);
     end else begin
@@ -52,7 +52,7 @@ always @(posedge CLK or negedge RESET) begin
                 `QUEUE_PUSH(in_data);
                 push_must_wait <= 0;
             end
-            pop_must_wait <= 0;
+            pop_must_wait <= `QUEUE_EMPTY;
         end else if (!pushing && popping) begin
             if (`QUEUE_EMPTY) begin
                 pop_must_wait <= 1;
@@ -61,7 +61,7 @@ always @(posedge CLK or negedge RESET) begin
                 queue[head] <= 0;
                 pop_must_wait <= 0;
             end
-            push_must_wait <= 0;
+            push_must_wait <= `QUEUE_FULL;
         end else if (pushing && popping) begin
             push_must_wait <= 0;
             pop_must_wait <= 0;
@@ -73,8 +73,8 @@ always @(posedge CLK or negedge RESET) begin
                 `QUEUE_PUSH(in_data);
             end
         end else begin
-            pop_must_wait <= 0;
-            push_must_wait <= 0;
+            pop_must_wait <= `QUEUE_EMPTY;
+            push_must_wait <= `QUEUE_FULL;
         end
 
         $sformat(s1, "%x", in_data);

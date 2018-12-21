@@ -376,7 +376,7 @@ module MIPS (
         Instr1_PC_IDFIFO
     };
 
-    FIFO #(8, 190, "Decode", "Rename") FIFO_DECODE_RENAME(
+    FIFO #(8, 191, "Decode", "Rename") FIFO_DECODE_RENAME(
         .CLK(CLK),
         .RESET(RESET),
         .in_data(FIFO_in_ID_RENAME),
