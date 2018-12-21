@@ -311,7 +311,7 @@ module MIPS (
     wire [31:0] ALU_result_async1;
     wire        ALU_result_async_valid1;
 `endif
-    wire [95:0] FIFO_in_ID_RENAME;
+    wire [190:0] FIFO_in_ID_RENAME;
     wire        popping_RENAME;
     wire        ID_wait_for_FIFO_push;
     wire [190:0] FIFO_out_ID_RENAME;
@@ -319,7 +319,7 @@ module MIPS (
 
     // stuff from ID into RENAME
     wire [31:0] Instr1_IDRENAME;
-    wire [31:0] Instr1_PC_IDRENAME;
+    wire [31:0] Instr_PC_IDRENAME;
     wire        Instr1_Available_IDRENAME;
 
     wire [31:0] Alt_PC_IDRENAME;
