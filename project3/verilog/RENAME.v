@@ -42,7 +42,9 @@ module RENAME
     output reg Pop_from_id_fifo, // 0 = don't accept input from FIFO, 1 = do
     output reg [`ROB_ENTRY_BITS-1:0] ROB_entry, // we don't need ROB_entry_valid because we rely on Blocked
     output reg Grabbed_regs,                    // number of registers we grabbed off the free list
-
+    output reg Frat_arch_reg,
+    output reg Frat_phy_reg,
+    output reg Frat_update, // 0 = don't update F-RAT, 1 = update
     output reg Blocked                          // whether the Rename stage can proceed
 );
 
@@ -51,6 +53,7 @@ wire num_needed_regs = WriteRegister1_IN != 0;
 always @(posedge CLK or negedge RESET) begin
     Blocked <= 0;
     Pop_from_id_fifo <= 1;
+    Frat_update <= 0;
     Grabbed_regs <= 0;
     Issue_queue_entry_valid <= 0;
     Load_store_queue_entry_valid <= 0;
@@ -88,6 +91,10 @@ always @(posedge CLK or negedge RESET) begin
                 end else begin      // we're good to go; we should only need one reg
                     Load_store_queue_entry <= {1'b0,1'b0,Free_phys_reg,32'd0};
                     Load_store_queue_entry_valid <= 1;
+                    Frat_arch_reg <= WriteRegister1_IN;
+                    Frat_phy_reg <= Free_phys_reg;
+                    Frat_update <= 1;
+
                 end
             end
             if (!MemRead1_IN || !Load_store_queue_full) begin
@@ -99,6 +106,9 @@ always @(posedge CLK or negedge RESET) begin
                     1'b1, Free_phys_reg,
                     MemWrite1_IN, MemRead1_IN};
                 Issue_queue_entry_valid <= 1;
+                Frat_arch_reg <= WriteRegister1_IN;
+                Frat_phy_reg <= Free_phys_reg;
+                Frat_update <= 1;
                 Grabbed_regs <= num_needed_regs;
                 ROB_entry <= {1'b0, Instr1_IN, Instr1_addr, Alt_PC, Request_Alt_PC, 1'b1, Free_phys_reg, WriteRegister1_IN};
             end
