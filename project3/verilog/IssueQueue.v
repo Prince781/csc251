@@ -43,7 +43,13 @@ module IssueQueue #(
 
     reg initialized;
 
+    initial begin
+        initialized = 0;
+    end
+
     integer i;
+
+    assign IssueQueueEntry_OUT = entry_selected;
 
 
     always @(posedge CLK or negedge RESET) begin
@@ -53,10 +59,11 @@ module IssueQueue #(
             tail <= 0;
             full <= 0;
             for (i = 0; i <= QUEUE_SIZE; i = i + 1) begin
-               ready_bits[i] <= i;
+               queue[i] <= i;
             end
-            if (initialized) begin
+            if (!initialized) begin
                 $display("Issue Queue: initializing");
+                initialized <= 1;
             end else begin
                 $display("Issue Queue: RESET");
             end
