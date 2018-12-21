@@ -451,9 +451,9 @@ module MIPS (
         .Grabbed_regs(),
         .Blocked(RENAME_blocked),
         .Pop_from_id_fifo(popping_RENAME),
-        .Frat_arch_reg(Register_update_src_RENAME_FRAT);
-        .Frat_phy_reg(Register_update_dst_RENAME_FRAT);
-        .Frat_update(WriteReg_RENAME_FRAT);
+        .Frat_arch_reg(Register_update_src_RENAME_FRAT),
+        .Frat_phy_reg(Register_update_dst_RENAME_FRAT),
+        .Frat_update(WriteReg_RENAME_FRAT)
     );
 
     IssueQueue IQ(

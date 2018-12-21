@@ -90,7 +90,7 @@ always @(posedge CLK or negedge RESET) begin
                         Blocked <= 1;
                         Pop_from_id_fifo <= 0;
                     end else begin      // we're good to go; we should only need one reg
-                        load_store_queue_entry <= {1'b0,1'b0,free_phys_reg,32'd0};
+                        Load_store_queue_entry <= {1'b0,1'b0,Free_phys_reg,32'd0};
                         Load_store_queue_entry_valid <= 1;
                         Frat_arch_reg <= WriteRegister1_IN;
                         Frat_phy_reg <= Free_phys_reg;
