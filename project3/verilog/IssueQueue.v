@@ -85,6 +85,7 @@ module IssueQueue #(
                         ready_bits[i] = 1;
                     end
                 end
+                $display("Issue Queue: Wake up Reg:%d", ReadyRegister_IN);
             end
             // TODO: Better select algorithm
             // SELECT
@@ -101,6 +102,7 @@ module IssueQueue #(
                     tail <= tail - 1;
                     full <= 0;
                     DequeueResult_OUT <= 1;
+                    $display("Issue Queue: Select entry %x", entry_selected);
                 end
             end
             //ENQUEUE
@@ -112,6 +114,7 @@ module IssueQueue #(
                         full <= 1;
                     end
                     EnqueueResult_OUT <= 1;
+                    $display("Issue Queue: Enqueue entry %x", IssueQueueEntry_IN);
                 end
             end
             Full_OUT <= full;

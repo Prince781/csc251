@@ -62,6 +62,7 @@ module FreeList #(
                         full = 1;
                     end
                 end
+                $display("Free List: Enqueue Reg:%d, tail:%d, full:%d", Data_IN, tail, full);
             end
             if (Dequeue_IN) begin
                 if (!(head == tail && full == 0)) begin // only dequeue when the queue is not empty
