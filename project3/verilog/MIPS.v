@@ -390,21 +390,21 @@ module MIPS (
     assign Instr1_Available_IDRENAME = !RENAME_wait_for_FIFO_pop;
 
     // stuff from ID (extracted from FIFO)
-    assign Instr_PC_IDRENAME = FIFO_out_ID_RENAME[31:0];
-    assign Instr1_IDRENAME = FIFO_out_ID_RENAME[63:32];
-    assign Alt_PC_IDRENAME = FIFO_out_ID_RENAME[95:64];
-    assign Request_Alt_PC_IDRENAME = FIFO_out_ID_RENAME[96];
-    assign HasImmediate_IDRENAME = FIFO_out_ID_RENAME[97];
-    assign Immediate_IDRENAME = FIFO_out_ID_RENAME[129:98];
-    assign ReadRegisterA1_IDRENAME = FIFO_out_ID_RENAME[134:130];
-    assign ReadRegisterB1_IDRENAME = FIFO_out_ID_RENAME[139:135];
-    assign WriteRegister1_IDRENAME = FIFO_out_ID_RENAME[144:140];
-    assign MemWriteData1_IDRENAME = FIFO_out_ID_RENAME[176:145];
-    assign ALU_Control1_IDRENAME = FIFO_out_ID_RENAME[182:177];
-    assign RegWrite_IDRENAME = FIFO_out_ID_RENAME[183];
-    assign MemRead_IDRENAME = FIFO_out_ID_RENAME[184];
-    assign MemWrite_IDRENAME = FIFO_out_ID_RENAME[185];
-    assign ShiftAmount1_IDRENAME = FIFO_out_ID_RENAME[190:186];
+    assign Instr_PC_IDRENAME = (!RENAME_blocked) ? FIFO_out_ID_RENAME[31:0] : Instr_PC_IDRENAME;
+    assign Instr1_IDRENAME = (!RENAME_blocked) ? FIFO_out_ID_RENAME[63:32] : Instr1_IDRENAME;
+    assign Alt_PC_IDRENAME = (!RENAME_blocked) ? FIFO_out_ID_RENAME[95:64] : Alt_PC_IDRENAME;
+    assign Request_Alt_PC_IDRENAME = (!RENAME_blocked) ? FIFO_out_ID_RENAME[96] : Request_Alt_PC_IDRENAME;
+    assign HasImmediate_IDRENAME = (!RENAME_blocked) ? FIFO_out_ID_RENAME[97] : HasImmediate_IDRENAME;
+    assign Immediate_IDRENAME = (!RENAME_blocked) ? FIFO_out_ID_RENAME[129:98] : Immediate_IDRENAME;
+    assign ReadRegisterA1_IDRENAME = (!RENAME_blocked) ? FIFO_out_ID_RENAME[134:130] : ReadRegisterA1_IDRENAME;
+    assign ReadRegisterB1_IDRENAME = (!RENAME_blocked) ? FIFO_out_ID_RENAME[139:135] : ReadRegisterB1_IDRENAME;
+    assign WriteRegister1_IDRENAME = (!RENAME_blocked) ? FIFO_out_ID_RENAME[144:140] : WriteRegister1_IDRENAME;
+    assign MemWriteData1_IDRENAME = (!RENAME_blocked) ? FIFO_out_ID_RENAME[176:145] : MemWriteData1_IDRENAME;
+    assign ALU_Control1_IDRENAME = (!RENAME_blocked) ? FIFO_out_ID_RENAME[182:177] : ALU_Control1_IDRENAME;
+    assign RegWrite_IDRENAME = (!RENAME_blocked) ? FIFO_out_ID_RENAME[183] : RegWrite_IDRENAME;
+    assign MemRead_IDRENAME = (!RENAME_blocked) ? FIFO_out_ID_RENAME[184] : MemRead_IDRENAME;
+    assign MemWrite_IDRENAME = (!RENAME_blocked) ? FIFO_out_ID_RENAME[185] : MemWrite_IDRENAME;
+    assign ShiftAmount1_IDRENAME = (!RENAME_blocked) ? FIFO_out_ID_RENAME[190:186] : ShiftAmount1_IDRENAME;
 
     // F-RAT outputs
     wire [`PROJ_LOG_PHYS-1:0] FRAT_ptrs [`PROJ_NUM_ARCH_REGS-1:0];
@@ -454,7 +454,7 @@ module MIPS (
         .Load_store_queue_entry(Entry_RENAME_LSQ),
         .Load_store_queue_entry_valid(Entry_valid_RENAME_LSQ),
         .ROB_entry(Entry_RENAME_ROB),
-        .Grabbed_regs(),
+        .Grabbed_regs(Dequeue_entry_RENAME_FL),
         .Blocked(RENAME_blocked),
         .Pop_from_id_fifo(popping_RENAME),
         .Frat_arch_reg(Register_update_src_RENAME_FRAT),
@@ -500,6 +500,7 @@ module MIPS (
         .RESET(RESET),
         .Enqueue_IN(Enqueue_entry_ROB_FL),
         .Data_IN(Entry_ROB_FL),
+        //.Dequeue_IN(WriteRegister1_IDRENAME),
         .Dequeue_IN(Dequeue_entry_RENAME_FL),
         .DequeueResult_OUT(Free_reg_avail),
         .Data_OUT(Free_phys_reg)

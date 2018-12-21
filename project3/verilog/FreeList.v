@@ -25,7 +25,7 @@ module FreeList #(
     initial begin
         head = 0;
         tail = 0;
-        full = 0;
+        full = 1;
         counter = 1;
         // Initialize queue. Enqueue all physical registers. 
         while (counter < LOG_PHYS) begin
@@ -39,7 +39,7 @@ module FreeList #(
         if (!RESET) begin
             head = 0;
             tail = 0;
-            full = 0;
+            full = 1;
             counter = 1;
             // Initialize queue. Enqueue all physical registers. 
             while (counter < `LOG_PHYS) begin
@@ -50,6 +50,7 @@ module FreeList #(
         end else begin
             // Enqueue first so when the queue is empty and there are both enqueue request and dequeue request,
             // there will be free register to dequeue
+            $display("Free List: Enqueue:%d,Dequeue:%d", Enqueue_IN, Dequeue_IN);
             if (Enqueue_IN) begin
                 // Normally, the list should never be full before an enqueue because
                 // the number of free registers should always be less than or equal to 
@@ -68,6 +69,7 @@ module FreeList #(
                     head = (head + 1) % NUM_PHYS_REGS;
                     full = 0;
                     DequeueResult_OUT = 1;
+                    $display("Free List: Dequeue Reg:%d, head:%d, full:%d, DequeueResult: %d", Data_OUT, head, full, DequeueResult_OUT);
                 end
             end
             
