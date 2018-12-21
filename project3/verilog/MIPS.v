@@ -352,8 +352,8 @@ module MIPS (
     wire [`ROB_ENTRY_BITS-1:0] Entry_RENAME_ROB;
     wire Grabbed_regs_RENAME_FL;
     wire RENAME_blocked;
-    wire Register_update_src_RENAME_FRAT;
-    wire Register_update_dst_RENAME_FRAT;
+    wire [`PROJ_LOG_ARCH-1:0] Register_update_src_RENAME_FRAT;
+    wire [`PROJ_LOG_PHYS-1:0] Register_update_dst_RENAME_FRAT;
     wire WriteReg_RENAME_FRAT;
 
 

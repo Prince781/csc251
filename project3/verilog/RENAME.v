@@ -42,8 +42,8 @@ module RENAME
     output reg Pop_from_id_fifo, // 0 = don't accept input from FIFO, 1 = do
     output reg [`ROB_ENTRY_BITS-1:0] ROB_entry, // we don't need ROB_entry_valid because we rely on Blocked
     output reg Grabbed_regs,                    // number of registers we grabbed off the free list
-    output reg Frat_arch_reg,
-    output reg Frat_phy_reg,
+    output reg [`PROJ_LOG_ARCH-1:0] Frat_arch_reg,
+    output reg [`PROJ_LOG_PHYS-1:0] Frat_phy_reg,
     output reg Frat_update, // 0 = don't update F-RAT, 1 = update
     output reg Blocked                          // whether the Rename stage can proceed
 );
