@@ -66,8 +66,8 @@ assign update_ROB_RRAT = !ROB_full && reg_update && ready_commit;
 
 RAT #(
     .NUM_ARCH_REGS(35),
-    .NUM_PHYS_REGS(NUM_PHYS_REGS)
-    /* Maybe Others? */
+    .NUM_PHYS_REGS(NUM_PHYS_REGS),
+    .NAME("R-RAT")
 )RRAT(
     .RESET(RESET),
     .Register_update_src(Arch_reg),

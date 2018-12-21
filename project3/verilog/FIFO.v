@@ -58,6 +58,7 @@ always @(posedge CLK or negedge RESET) begin
                 pop_must_wait <= 1;
             end else begin
                 out_data <= `QUEUE_POP;
+                queue[head] <= 0;
                 pop_must_wait <= 0;
             end
             push_must_wait <= 0;
@@ -68,6 +69,7 @@ always @(posedge CLK or negedge RESET) begin
                 out_data <= in_data;
             end else begin
                 out_data <= `QUEUE_POP;
+                queue[head] <= 0;
                 `QUEUE_PUSH(in_data);
             end
         end else begin

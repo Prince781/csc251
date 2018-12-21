@@ -16,9 +16,9 @@ module RENAME
     // stuff from Decode stage
     input HasImmediate_IN,                          // whether instr has an immediate
     input [31:0] Immediate_IN,
-    input [4:0] ReadRegisterA1_IN,
-    input [4:0] ReadRegisterB1_IN,
-    input [4:0] WriteRegister1_IN,
+    input [`PROJ_LOG_ARCH-1:0] ReadRegisterA1_IN,
+    input [`PROJ_LOG_ARCH-1:0] ReadRegisterB1_IN,
+    input [`PROJ_LOG_ARCH-1:0] WriteRegister1_IN,
     input [31:0] MemWriteData1_IN,
     input [5:0] ALU_Control1_IN,
     input RegWrite_IN,

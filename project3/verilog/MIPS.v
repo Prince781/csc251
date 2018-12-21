@@ -187,8 +187,6 @@ module MIPS (
 
 	wire [31:0] Instr1_IDEXE;
     wire [31:0] Instr1_PC_IDEXE;
-	wire [31:0] OperandA1_IDEXE;
-	wire [31:0] OperandB1_IDEXE;
 `ifdef HAS_FORWARDING
     wire [4:0]  RegisterA1_IDEXE;
     wire [4:0]  RegisterB1_IDEXE;
@@ -233,6 +231,22 @@ module MIPS (
     assign Instr_PC_Plus4_IFID = FIFO_out_IF_ID[31:0];
     assign Instr1_Available_IFID = !ID_wait_for_FIFO_pop;
 
+    wire [31:0] Instr1_IDFIFO;
+    wire [31:0] Instr1_PC_IDFIFO;
+    wire [31:0] Alt_PC_IDFIFO;
+    wire        Request_Alt_PC_IDFIFO;
+    wire [4:0]  ReadRegisterA1_IDFIFO;
+    wire [4:0]  ReadRegisterB1_IDFIFO;
+    wire [4:0]  WriteRegister1_IDFIFO;
+    wire        HasImmediate_IDFIFO;
+    wire [31:0] Immediate_IDFIFO;
+    wire [31:0] MemWriteData1_IDFIFO;
+    wire [4:0]  ALU_Control1_IDFIFO;
+    wire        RegWrite1_IDFIFO;
+    wire        MemRead1_IDFIFO;
+    wire        MemWrite1_IDFIFO;
+    wire [4:0]  ShiftAmount1_IDFIFO;
+
 	ID ID(
 		.CLK(CLK),
 		.RESET(RESET),
@@ -250,25 +264,25 @@ module MIPS (
 		.RegWrite1_IN(RegWrite1_MEMWB),
 		.Alt_PC(Alt_PC_IDIF),
 		.Request_Alt_PC(Request_Alt_PC_IDIF),
-		.Instr1_OUT(Instr1_IDEXE),
-        .Instr1_PC_OUT(Instr1_PC_IDEXE),
+		.Instr1_OUT(Instr1_IDFIFO),
+        .Instr1_PC_OUT(Instr1_PC_IDFIFO),
         .HasImmediate_OUT(HasImmediate_IDFIFO),
         .Immediate_OUT(Immediate_IDFIFO),
 `ifdef HAS_FORWARDING
-		.ReadRegisterA1_OUT(RegisterA1_IDEXE),
-		.ReadRegisterB1_OUT(RegisterB1_IDEXE),
+		.ReadRegisterA1_OUT(ReadRegisterA1_IDFIFO),
+		.ReadRegisterB1_OUT(ReadRegisterB1_IDFIFO),
 `else
 /* verilator lint_off PINCONNECTEMPTY */
         .ReadRegisterA1_OUT(),
         .ReadRegisterB1_OUT(),
 /* verilator lint_on PINCONNECTEMPTY */
 `endif
-		.WriteRegister1_OUT(WriteRegister1_IDEXE),
-		.RegWrite1_OUT(RegWrite1_IDEXE),
-		.ALU_Control1_OUT(ALU_Control1_IDEXE),
-		.MemRead1_OUT(MemRead1_IDEXE),
-		.MemWrite1_OUT(MemWrite1_IDEXE),
-		.ShiftAmount1_OUT(ShiftAmount1_IDEXE),
+		.WriteRegister1_OUT(WriteRegister1_IDFIFO),
+		.RegWrite1_OUT(RegWrite1_IDFIFO),
+		.ALU_Control1_OUT(ALU_Control1_IDFIFO),
+		.MemRead1_OUT(MemRead1_IDFIFO),
+		.MemWrite1_OUT(MemWrite1_IDFIFO),
+		.ShiftAmount1_OUT(ShiftAmount1_IDFIFO),
 `ifdef HAS_FORWARDING
 		.BypassReg1_EXEID(BypassReg1_EXEID),
 		.BypassData1_EXEID(BypassData1_EXEID),
@@ -299,7 +313,7 @@ module MIPS (
     wire        Instr1_Available_IDFIFO;
     wire        popping_RENAME;
     wire        ID_wait_for_FIFO_push;
-    wire [95:0] FIFO_out_ID_RENAME;
+    wire [190:0] FIFO_out_ID_RENAME;
     wire        RENAME_wait_for_FIFO_pop;
 
     // stuff from ID into RENAME
@@ -337,22 +351,26 @@ module MIPS (
     wire [`ROB_ENTRY_BITS-1:0] Entry_RENAME_ROB;
     wire Grabbed_regs_RENAME_FL;
     wire RENAME_blocked;
+    wire Register_update_src_RENAME_FRAT;
+    wire Register_update_dst_RENAME_FRAT;
+    wire WriteReg_RENAME_FRAT;
+
 
     // ID passing data into FIFO
     assign FIFO_in_ID_RENAME = {
-        Instr_PC_IDRENAME,
-        Instr1_IDRENAME,
-        Alt_PC_IDRENAME,
-        Request_Alt_PC_IDRENAME,
-        ReadRegisterA1_IDRENAME,
-        ReadRegisterB1_IDRENAME,
-        WriteRegister1_IDRENAME,
-        MemWriteData1_IDRENAME,
-        ALU_Control1_IDRENAME,
-        RegWrite_IDRENAME,
-        MemRead_IDRENAME,
-        MemWrite_IDRENAME,
-        ShiftAmount1_IDRENAME
+        Instr1_PC_IDFIFO,
+        Instr1_IDFIFO,
+        Alt_PC_IDFIFO,
+        Request_Alt_PC_IDFIFO,
+        ReadRegisterA1_IDFIFO,
+        ReadRegisterB1_IDFIFO,
+        WriteRegister1_IDFIFO,
+        MemWriteData1_IDFIFO,
+        ALU_Control1_IDFIFO,
+        RegWrite1_IDFIFO,
+        MemRead1_IDFIFO,
+        MemWrite1_IDFIFO,
+        ShiftAmount1_IDFIFO
     };
 
     FIFO #(8, 96, "Decode", "Rename") FIFO_DECODE_RENAME(
@@ -385,15 +403,15 @@ module MIPS (
     assign MemWrite_IDRENAME = FIFO_out_ID_RENAME[185];
     assign ShiftAmount1_IDRENAME = FIFO_out_ID_RENAME[190:186];
 
-    // F-RAT
+    // F-RAT outputs
     wire [`PROJ_LOG_PHYS-1:0] FRAT_ptrs [`PROJ_NUM_ARCH_REGS-1:0];
 
     RAT #(35, `PROJ_NUM_PHYS_REGS, "F-RAT") FRAT(
         .RESET(RESET),
-        .Register_update_src(),
-        .Register_update_dst(),
-        .Write(),
-        .regPtrs(FRAT_ptrs)
+        .Register_update_src(Register_update_src_RENAME_FRAT),
+        .Register_update_dst(Register_update_dst_RENAME_FRAT),
+        .Write(WriteReg_RENAME_FRAT),
+        .RegPtrs(FRAT_ptrs)
     );
 
     RENAME RENAME(
@@ -418,15 +436,15 @@ module MIPS (
         .Map_arch_to_phys(FRAT_ptrs),
         .Free_phys_reg(Free_phys_reg),
         .Free_reg_avail(Free_reg_avail),
-        .Busy_list(),
-        .ROB_full(),
+        .Busy_list(Busy_list_RegRead_RENAME),
+        .ROB_full(Full_ROB_RENAME),
         .Issue_queue_full(),
         .Load_store_queue_full(Blocked_LSQ),
         .Issue_queue_entry(Entry_RENAME_IQ),
         .Issue_queue_entry_valid(Entry_valid_RENAME_IQ),
         .Load_store_queue_entry(Entry_RENAME_LSQ),
         .Load_store_queue_entry_valid(Entry_valid_RENAME_LSQ),
-        .ROB_entry(),
+        .ROB_entry(Entry_RENAME_ROB),
         .Grabbed_regs(),
         .Blocked(RENAME_blocked)
     );
@@ -449,6 +467,7 @@ module MIPS (
     wire Blocked_LSQ;
     wire [`LOAD_STORE_QUEUE_ENTRY_BITS-1:0] Entry_LSQ_MEM;
     wire Entry_valid_LSQ_MEM;
+    wire Popping_MEM_LSQ;
 
     FIFO #(16, `LOAD_STORE_QUEUE_ENTRY_BITS, "RENAME", "LSQ") LSQ(
         .CLK(CLK),
@@ -460,6 +479,11 @@ module MIPS (
         .out_data(Entry_LSQ_MEM),
         .pop_must_wait(Entry_valid_LSQ_MEM)
     );
+
+    // going into FL
+    wire Enqueue_entry_ROB_FL;
+    wire Dequeue_entry_RENAME_FL;
+    wire [`PROJ_LOG_PHYS-1:0] Entry_ROB_FL; // new register to add back to free list
 
     FreeList #(`PROJ_NUM_PHYS_REGS) FL(
         .CLK(CLK),
@@ -481,12 +505,8 @@ module MIPS (
 		.Instr1_PC_IN(Instr1_PC_IDEXE),
 `ifdef HAS_FORWARDING
 		.RegisterA1_IN(RegisterA1_IDEXE),
-`endif
-		.OperandA1_IN(OperandA1_IDEXE),
-`ifdef HAS_FORWARDING
 		.RegisterB1_IN(RegisterB1_IDEXE),
 `endif
-		.OperandB1_IN(OperandB1_IDEXE),
 		.WriteRegister1_IN(WriteRegister1_IDEXE),
 		.MemWriteData1_IN(MemWriteData1_IDEXE),
 		.RegWrite1_IN(RegWrite1_IDEXE),
@@ -628,7 +648,9 @@ module MIPS (
 `endif
 
 `ifdef OUT_OF_ORDER
-    RegRead RegRead(
+    wire [`PROJ_NUM_PHYS_REGS-1:0] Busy_list_RegRead_RENAME;
+
+    RegRead #(`PROJ_NUM_PHYS_REGS) RegRead(
         .CLK(CLK),
         .RESET(RESET),
         .RegAddrA_IN(),
@@ -643,8 +665,11 @@ module MIPS (
         .RegValueA_OUT(),
         .RegValueB_OUT(),
         .RegValueC_OUT(),
-        .Busy_list_OUT()
+        .Busy_list_OUT(Busy_list_RegRead_RENAME)
     );
+
+    wire Full_ROB_RENAME;
+
     RetireCommit RetireCommit(
         .CLK(CLK),
         .RESET(RESET),
@@ -652,7 +677,7 @@ module MIPS (
         .ROB_entry_invalid_IN(),
         .Flush_OUT(),
         .RegPtrs_OUT(),
-        .ROB_full_OUT()
+        .ROB_full_OUT(Full_ROB_RENAME)
     );
 `endif
 endmodule
