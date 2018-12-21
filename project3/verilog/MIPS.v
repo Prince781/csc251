@@ -381,8 +381,8 @@ module MIPS (
         .RESET(RESET),
         .in_data(FIFO_in_ID_RENAME),
         .pushing(Instr1_Available_IDFIFO),
-        .popping(!RENAME_blocked),
-        //.popping(popping_RENAME),
+        //.popping(!RENAME_blocked),
+        .popping(popping_RENAME),
         .push_must_wait(ID_wait_for_FIFO_push),
         .out_data(FIFO_out_ID_RENAME),
         .pop_must_wait(RENAME_wait_for_FIFO_pop)
@@ -450,7 +450,8 @@ module MIPS (
         .Load_store_queue_entry_valid(Entry_valid_RENAME_LSQ),
         .ROB_entry(Entry_RENAME_ROB),
         .Grabbed_regs(),
-        .Blocked(RENAME_blocked)
+        .Blocked(RENAME_blocked),
+        .Pop_from_id_fifo(popping_RENAME)
     );
 
     IssueQueue IQ(

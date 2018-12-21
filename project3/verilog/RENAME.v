@@ -39,7 +39,7 @@ module RENAME
     output reg Issue_queue_entry_valid,
     output reg [`LOAD_STORE_QUEUE_ENTRY_BITS-1:0] Load_store_queue_entry,
     output reg Load_store_queue_entry_valid,
-
+    output reg Pop_from_id_fifo, // 0 = don't accept input from FIFO, 1 = do
     output reg [`ROB_ENTRY_BITS-1:0] ROB_entry, // we don't need ROB_entry_valid because we rely on Blocked
     output reg Grabbed_regs,                    // number of registers we grabbed off the free list
 
@@ -50,6 +50,7 @@ wire num_needed_regs = WriteRegister1_IN != 0;
 
 always @(posedge CLK or negedge RESET) begin
     Blocked <= 0;
+    Pop_from_id_fifo <= 1;
     Grabbed_regs <= 0;
     Issue_queue_entry_valid <= 0;
     Load_store_queue_entry_valid <= 0;
@@ -68,18 +69,22 @@ always @(posedge CLK or negedge RESET) begin
     end else if (ROB_full) begin
         $display("RENAME: blocked while ROB is full.");
         Blocked <= 1;
+        Pop_from_id_fifo <= 0;
     end else if (RegWrite_IN) begin     // this instruction writes to a register (either ld or ALU op)
         if (Free_reg_avail < num_needed_regs) begin
             $display("RENAME: blocked while waiting for free registers.");
             Blocked <= 1;
+            Pop_from_id_fifo <= 0;
         end else if (Issue_queue_full) begin
             $display("RENAME: blocked while issue queue is full.");
             Blocked <= 1;
+            Pop_from_id_fifo <= 0;
         end else begin      // we have the registers, and our place in the ROB, but what about the issue queue/LS queue?
             if (MemRead1_IN) begin       // we are a ld
                 if (Load_store_queue_full) begin
                     $display("RENAME: blocked waiting for LS queue.");
                     Blocked <= 1;
+                    Pop_from_id_fifo <= 0;
                 end else begin      // we're good to go; we should only need one reg
                     Load_store_queue_entry <= {1'b0,1'b0,Free_phys_reg,32'd0};
                     Load_store_queue_entry_valid <= 1;
@@ -102,6 +107,7 @@ always @(posedge CLK or negedge RESET) begin
         if (Issue_queue_full) begin
             $display("RENAME: blocked while issue queue is full.");
             Blocked <= 1;
+            Pop_from_id_fifo <= 0;
         end else begin
             Load_store_queue_entry <= {1'b1,1'b0,ReadRegisterA1_IN == 0 ? 6'd0 : Map_arch_to_phys[ReadRegisterA1_IN],32'd0};
             Load_store_queue_entry_valid <= 1;
