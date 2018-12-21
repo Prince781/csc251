@@ -359,30 +359,29 @@ module MIPS (
 
     // ID passing data into FIFO
     assign FIFO_in_ID_RENAME = {
-        Instr1_PC_IDFIFO,
-        Instr1_IDFIFO,
-        Alt_PC_IDFIFO,
-        Request_Alt_PC_IDFIFO,
-        HasImmediate_IDFIFO,
-        Immediate_IDFIFO,
-        ReadRegisterA1_IDFIFO,
-        ReadRegisterB1_IDFIFO,
-        WriteRegister1_IDFIFO,
-        MemWriteData1_IDFIFO,
-        ALU_Control1_IDFIFO,
-        RegWrite1_IDFIFO,
-        MemRead1_IDFIFO,
+        ShiftAmount1_IDFIFO,
         MemWrite1_IDFIFO,
-        ShiftAmount1_IDFIFO
+        MemRead1_IDFIFO,
+        RegWrite1_IDFIFO,
+        ALU_Control1_IDFIFO,
+        MemWriteData1_IDFIFO,
+        WriteRegister1_IDFIFO,
+        ReadRegisterB1_IDFIFO,
+        ReadRegisterA1_IDFIFO,
+        Immediate_IDFIFO,
+        HasImmediate_IDFIFO,
+        Request_Alt_PC_IDFIFO,
+        Alt_PC_IDFIFO,
+        Instr1_IDFIFO,
+        Instr1_PC_IDFIFO
     };
 
-    FIFO #(8, 96, "Decode", "Rename") FIFO_DECODE_RENAME(
+    FIFO #(8, 190, "Decode", "Rename") FIFO_DECODE_RENAME(
         .CLK(CLK),
         .RESET(RESET),
         .in_data(FIFO_in_ID_RENAME),
         .pushing(Instr1_Available_IDFIFO),
-        //.popping(!RENAME_blocked),
-        .popping(popping_RENAME),
+        .popping(!RENAME_blocked),
         .push_must_wait(ID_wait_for_FIFO_push),
         .out_data(FIFO_out_ID_RENAME),
         .pop_must_wait(RENAME_wait_for_FIFO_pop)
