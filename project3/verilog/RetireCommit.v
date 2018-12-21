@@ -26,7 +26,10 @@ module  RetireCommit #(
     output ROB_full_OUT,
 
     output Flush_OUT,
-    output reg [`LOG_PHYS-1:0] RegPtrs_OUT [NUM_ARCH_REGS-1:0]
+    output reg [`LOG_PHYS-1:0] RegPtrs_OUT [NUM_ARCH_REGS-1:0],
+
+    output ROB_free_reg_OUT,
+    output [`LOG_PHYS-1:0] ROB_phys_reg_OUT
 );/*verilator public_module*/
 
 wire ROB_entry_valid = !ROB_entry_invalid_IN;
@@ -63,6 +66,9 @@ ROB #(64, ROB_ENTRY_BITS, NUM_ARCH_REGS, NUM_PHYS_REGS) ROB(
 assign ROB_full_OUT = ROB_full;
 
 assign update_ROB_RRAT = !ROB_full && reg_update && ready_commit;
+
+assign ROB_free_reg_OUT = update_ROB_RRAT;
+assign ROB_phys_reg_OUT = update_ROB_RRAT ? Phys_reg : 0;
 
 RAT #(
     .NUM_ARCH_REGS(35),

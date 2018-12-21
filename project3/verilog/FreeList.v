@@ -41,7 +41,7 @@ always @(posedge CLK or negedge RESET) begin
         head <= 0;
         tail <= NUM_PHYS_REGS-1;
         full <= 0;
-        counter <= 0;
+        counter = 0;
         // Initialize queue. Enqueue all physical registers. 
         while (counter < `LOG_PHYS) begin
             queue[counter] <= counter;
@@ -50,16 +50,16 @@ always @(posedge CLK or negedge RESET) begin
     end else begin
         // Enqueue first so when the queue is empty and there are both enqueue request and dequeue request,
         // there will be free register to dequeue
-        $display("Free List: Enqueue:%d,Dequeue:%d", Enqueue_IN, Dequeue_IN);
+        $display("Free List: Enqueue? %b Dequeue? %b", Enqueue_IN, Dequeue_IN);
         if (Enqueue_IN) begin
             // Normally, the list should never be full before an enqueue because
             // the number of free registers should always be less than or equal to 
             // the total number of registers
             if (!full) begin
                 queue[tail[`LOG_PHYS-1:0]] = Data_IN;
-                tail = (tail + 1) % NUM_PHYS_REGS;
-                if (tail == head) begin
-                    full = 1;
+                tail <= (tail + 1) % NUM_PHYS_REGS;
+                if (tail + 1 == head) begin
+                    full <= 1;
                 end
             end
             $display("Free List: Enqueue Reg:%d, tail:%d, full:%d", Data_IN, tail, full);
@@ -67,8 +67,8 @@ always @(posedge CLK or negedge RESET) begin
         if (Dequeue_IN) begin
             if (!(head == tail && full == 0)) begin // only dequeue when the queue is not empty
                 Data_OUT = queue[head[`LOG_PHYS-1:0]];
-                head = (head + 1) % NUM_PHYS_REGS;
-                full = 0;
+                head <= (head + 1) % NUM_PHYS_REGS;
+                full <= 0;
                 DequeueResult_OUT = 1;
                 $display("Free List: Dequeue Reg:%d, head:%d, full:%d, DequeueResult: %d", Data_OUT, head, full, DequeueResult_OUT);
             end
