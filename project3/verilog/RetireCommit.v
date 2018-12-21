@@ -69,6 +69,7 @@ RAT #(
     .NUM_PHYS_REGS(NUM_PHYS_REGS),
     .NAME("R-RAT")
 )RRAT(
+    .CLK(CLK),
     .RESET(RESET),
     .Register_update_src(Arch_reg),
     .Register_update_dst(Phys_reg),

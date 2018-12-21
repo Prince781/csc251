@@ -32,6 +32,8 @@ end
 
 string s1;
 string s2;
+string sb1;
+string sb2;
 
 
 always @(posedge CLK or negedge RESET) begin
@@ -79,9 +81,14 @@ always @(posedge CLK or negedge RESET) begin
 
         $sformat(s1, "%x", in_data);
         $sformat(s2, "%x", out_data);
+        $sformat(sb1, "%b", in_data);
+        $sformat(sb2, "%b", out_data);
         $display("FIFO %s -> %s: size(queue) = %d, push: %s, pop: %s", FROM, TO, `QUEUE_SIZE,
             pushing ? (push_must_wait ? "halt" : s1) : "no",
             popping ? (pop_must_wait ? "halt": s2) : "no");
+        $display("FIFO %s -> %s: size(queue) = %d, push: %s, pop: %s", FROM, TO, `QUEUE_SIZE,
+            pushing ? (push_must_wait ? "halt" : sb1) : "no",
+            popping ? (pop_must_wait ? "halt": sb2) : "no");
     end
 end
 

@@ -409,8 +409,8 @@ always @(posedge CLK or negedge RESET) begin
 
 			if(comment1) begin
                 $display("ID1:Instr=%x,Instr_PC=%x,Req_Alt_PC=%d:Alt_PC=%x;SYS=%d(%d)",Instr1_IN,Instr_PC_IN,Request_Alt_PC1,Alt_PC1,syscal1,syscall_bubble_counter);
-                //$display("ID1:A:Reg[%d]=%x; B:Reg[%d]=%x; Write?%d to %d",RegA1, OpA1, RegB1, OpB1, (WriteRegister1!=5'd0)?RegWrite1:1'd0, WriteRegister1);
-                //$display("ID1:ALU_Control=%x; MemRead=%d; MemWrite=%d (%x); ShiftAmount=%d",ALU_control1, MemRead1, MemWrite1, MemWriteData1, shiftAmount1);
+                $display("ID1:A:Reg[%d]; B:Reg[%d]; Write?%d to %d",RegA1, RegB1, (WriteRegister1!=5'd0)?RegWrite1:1'd0, WriteRegister1);
+                $display("ID1:ALU_Control=%x; MemRead=%d; MemWrite=%d ; ShiftAmount=%d",ALU_control1, MemRead1, MemWrite1, shiftAmount1);
 			end
 `ifdef USE_ICACHE
 		end

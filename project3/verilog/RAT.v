@@ -22,6 +22,7 @@ module RAT #(
     /* Maybe Others? */
 )
 (
+    input CLK,
     input RESET,
 	input [`LOG_ARCH-1:0] Register_update_src,      /* arch register */
 	input [`LOG_PHYS-1:0] Register_update_dst,      /* phys register */
@@ -33,7 +34,7 @@ module RAT #(
   reg [`LOG_PHYS-1:0] ptrs [NUM_ARCH_REGS-1:0];
   assign regPtrs = ptrs;
     /* Write Me */
-	always @(Write) begin
+	always @(posedge CLK or negedge RESET) begin
         if (!RESET) begin
             $display("%s RESET", NAME);
             // TODO: what should be done here?
@@ -41,6 +42,8 @@ module RAT #(
             if (Write) begin
                 $display("%s: AReg #%d -> PReg #%d", NAME, Register_update_src, Register_update_dst);
                 ptrs[Register_update_src] = Register_update_dst;
+            end else begin
+                $display("%s: No action", NAME);
             end
         end
 	end

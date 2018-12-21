@@ -241,7 +241,7 @@ module MIPS (
     wire        HasImmediate_IDFIFO;
     wire [31:0] Immediate_IDFIFO;
     wire [31:0] MemWriteData1_IDFIFO;
-    wire [4:0]  ALU_Control1_IDFIFO;
+    wire [5:0]  ALU_Control1_IDFIFO;
     wire        RegWrite1_IDFIFO;
     wire        MemRead1_IDFIFO;
     wire        MemWrite1_IDFIFO;
@@ -330,7 +330,7 @@ module MIPS (
     wire        HasImmediate_IDRENAME;
     wire [31:0] Immediate_IDRENAME;
     wire [31:0] MemWriteData1_IDRENAME;
-    wire [4:0]  ALU_Control1_IDRENAME;
+    wire [5:0]  ALU_Control1_IDRENAME;
     wire        RegWrite_IDRENAME;
     wire        MemRead_IDRENAME;
     wire        MemWrite_IDRENAME;
@@ -376,7 +376,7 @@ module MIPS (
         Instr1_PC_IDFIFO
     };
 
-    FIFO #(8, 191, "Decode", "Rename") FIFO_DECODE_RENAME(
+    FIFO #(8, 192, "Decode", "Rename") FIFO_DECODE_RENAME(
         .CLK(CLK),
         .RESET(RESET),
         .in_data(FIFO_in_ID_RENAME),
@@ -410,12 +410,18 @@ module MIPS (
     wire [`PROJ_LOG_PHYS-1:0] FRAT_ptrs [`PROJ_NUM_ARCH_REGS-1:0];
 
     RAT #(35, `PROJ_NUM_PHYS_REGS, "F-RAT") FRAT(
+        .CLK(CLK),
         .RESET(RESET),
         .Register_update_src(Register_update_src_RENAME_FRAT),
         .Register_update_dst(Register_update_dst_RENAME_FRAT),
         .Write(WriteReg_RENAME_FRAT),
         .regPtrs(FRAT_ptrs)
     );
+
+    // going into FL
+    wire Enqueue_entry_ROB_FL;
+    wire Dequeue_entry_RENAME_FL;
+    wire [`PROJ_LOG_PHYS-1:0] Entry_ROB_FL; // new register to add back to free list
 
     RENAME RENAME(
         .CLK(CLK),
@@ -487,10 +493,7 @@ module MIPS (
         .pop_must_wait(Entry_valid_LSQ_MEM)
     );
 
-    // going into FL
-    wire Enqueue_entry_ROB_FL;
-    wire Dequeue_entry_RENAME_FL;
-    wire [`PROJ_LOG_PHYS-1:0] Entry_ROB_FL; // new register to add back to free list
+    
 
     FreeList #(`PROJ_NUM_PHYS_REGS) FL(
         .CLK(CLK),
