@@ -362,6 +362,8 @@ module MIPS (
         Instr1_IDFIFO,
         Alt_PC_IDFIFO,
         Request_Alt_PC_IDFIFO,
+        HasImmediate_IDFIFO,
+        Immediate_IDFIFO,
         ReadRegisterA1_IDFIFO,
         ReadRegisterB1_IDFIFO,
         WriteRegister1_IDFIFO,
@@ -411,7 +413,7 @@ module MIPS (
         .Register_update_src(Register_update_src_RENAME_FRAT),
         .Register_update_dst(Register_update_dst_RENAME_FRAT),
         .Write(WriteReg_RENAME_FRAT),
-        .RegPtrs(FRAT_ptrs)
+        .regPtrs(FRAT_ptrs)
     );
 
     RENAME RENAME(
