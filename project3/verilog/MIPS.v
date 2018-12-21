@@ -246,6 +246,7 @@ module MIPS (
     wire        MemRead1_IDFIFO;
     wire        MemWrite1_IDFIFO;
     wire [4:0]  ShiftAmount1_IDFIFO;
+    wire        Instr1_Available_IDFIFO;
 
 	ID ID(
 		.CLK(CLK),
@@ -293,7 +294,8 @@ module MIPS (
 `endif
 		.SYS(SYS),
 		.WANT_FREEZE(STALL_IDIF),
-        .Request_Instr1(popping_ID)
+        .Request_Instr1(popping_ID),
+        .Push_FIFO(Instr1_Available_IDFIFO)
 	);
 
 	wire [31:0] Instr1_EXEMEM;
@@ -310,7 +312,6 @@ module MIPS (
     wire        ALU_result_async_valid1;
 `endif
     wire [95:0] FIFO_in_ID_RENAME;
-    wire        Instr1_Available_IDFIFO;
     wire        popping_RENAME;
     wire        ID_wait_for_FIFO_push;
     wire [190:0] FIFO_out_ID_RENAME;
@@ -380,7 +381,8 @@ module MIPS (
         .RESET(RESET),
         .in_data(FIFO_in_ID_RENAME),
         .pushing(Instr1_Available_IDFIFO),
-        .popping(popping_RENAME),
+        .popping(!RENAME_blocked),
+        //.popping(popping_RENAME),
         .push_must_wait(ID_wait_for_FIFO_push),
         .out_data(FIFO_out_ID_RENAME),
         .pop_must_wait(RENAME_wait_for_FIFO_pop)
