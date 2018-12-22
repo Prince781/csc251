@@ -28,6 +28,8 @@ module RAT #(
 	input [`LOG_PHYS-1:0] Register_update_dst,      /* phys register */
 	input Write,
 
+    output [`LOG_PHYS-1:0] Old_phys_register,
+
 	// actual RAT memory
 	output reg [`LOG_PHYS-1:0] regPtrs [NUM_ARCH_REGS-1:0] /*verilator public_flat*/
 );
@@ -41,6 +43,7 @@ module RAT #(
         end else begin
             if (Write) begin
                 $display("%s: AReg #%d -> PReg #%d", NAME, Register_update_src, Register_update_dst);
+                Old_phys_register = ptrs[Register_update_src];
                 ptrs[Register_update_src] = Register_update_dst;
             end else begin
                 $display("%s: No action", NAME);

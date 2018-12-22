@@ -21,6 +21,8 @@
 module MEM(
     input CLK,
     input RESET,
+    input [5:0] ROB_entry_IN,
+    input Instr1_Valid_IN,
     //Currently executing instruction [debug only]
     input [31:0] Instr1_IN,
     //PC of executing instruction [debug only]
@@ -46,6 +48,8 @@ module MEM(
     //And what data
     output reg [31:0] WriteData1_OUT,
 	 
+    output reg ROB_update_OUT,
+    output reg [5:0] ROB_entry_OUT,
     output reg [31:0] data_write_2DM,
     output [31:0] data_address_2DM,
 	 output reg [1:0] data_write_size_2DM,
@@ -308,6 +312,8 @@ always @(posedge CLK or negedge RESET) begin
 		WriteRegister1_OUT <= 0;
 		RegWrite1_OUT <= 0;
 		WriteData1_OUT <= 0;
+        ROB_update_OUT <= 0;
+        ROB_entry_OUT <= 0;
 		$display("MEM:RESET");
 	end else if(CLK) begin
 `ifdef USE_DCACHE
@@ -318,6 +324,8 @@ always @(posedge CLK or negedge RESET) begin
 			WriteRegister1_OUT <= 0;
 			RegWrite1_OUT <= 0;
 			WriteData1_OUT <= 0;
+            ROB_update_OUT <= 0;
+            ROB_entry_OUT <= 0;
 		end else begin
 `endif
 			Instr1_OUT <= Instr1_IN;
@@ -325,6 +333,8 @@ always @(posedge CLK or negedge RESET) begin
 			WriteRegister1_OUT <= WriteRegister1_IN;
 			RegWrite1_OUT <= RegWrite1_IN;
 			WriteData1_OUT <= WriteData1;
+            ROB_update_OUT <= Instr1_Valid_IN;
+            ROB_entry_OUT <= ROB_entry_IN;
 			if(comment1) begin
 				$display("MEM:Instr1_OUT=%x,Instr1_PC_OUT=%x,WriteData1=%x; Write?%d to %d",Instr1_IN,Instr1_PC_IN,WriteData1, RegWrite1_IN, WriteRegister1_IN);
 				$display("MEM:data_address_2DM=%x; data_write_2DM(%d)=%x(%d); data_read_fDM(%d)=%x",data_address_2DM,MemWrite_2DM,data_write_2DM,data_write_size_2DM,MemRead_2DM,data_read_fDM);

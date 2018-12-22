@@ -26,6 +26,7 @@ module EXE(
 	 input STALL_fMEM,
 `endif
     input Instr1_Valid_IN,
+    input [5:0] ROB_entry_IN,
 
 	 //Current instruction [debug]
     input [31:0] Instr1_IN,
@@ -78,7 +79,9 @@ module EXE(
     //We need to write to MEM (passed to MEM)
     output reg MemWrite1_OUT,
 
+    output reg [5:0] ROB_entry_OUT,
     output reg ReadyUpdate_OUT,
+    output reg Instr1_Valid_OUT,
 
     output reg Want_Instr
     
@@ -195,7 +198,9 @@ always @(posedge CLK or negedge RESET) begin
 		MemRead1_OUT <= 0;
 		MemWrite1_OUT <= 0;
         ReadyUpdate_OUT <= 0;
+        ROB_entry_OUT <= 0;
         Want_Instr <= 1;
+        Instr1_Valid_OUT <= 0;
 		$display("EXE:RESET");
 	end else if(CLK) begin
        HI <= new_HI;
@@ -203,11 +208,13 @@ always @(posedge CLK or negedge RESET) begin
 `ifdef USE_DCACHE
 		if(STALL_fMEM) begin
             Want_Instr <= 0;
+            Instr1_Valid_OUT <= 0;
             $display("EXE[STALL_fMEM]:Instr1_OUT=%x,Instr1_PC_OUT=%x", Instr1_OUT, Instr1_PC_OUT);
 		end else begin
 `endif
             Want_Instr <= 1;
             if (!Instr1_Valid_IN) begin
+                Instr1_Valid_OUT <= 0;
                 $display("EXE: waiting for instruction");
             end else begin
                 Instr1_OUT <= Instr1_IN;
@@ -220,6 +227,8 @@ always @(posedge CLK or negedge RESET) begin
                 MemRead1_OUT <= MemRead1_IN;
                 MemWrite1_OUT <= MemWrite1_IN;
                 ReadyUpdate_OUT <= 1'b1;        // TODO: should this always be 1?
+                ROB_entry_OUT <= ROB_entry_IN;
+                Instr1_Valid_OUT <= 1'b1;
                 if(comment1) begin
                     $display("EXE:Instr1=%x,Instr1_PC=%x,ALU_result1=%x; Write?%d to %d",Instr1_IN,Instr1_PC_IN,ALU_result1, RegWrite1_IN, WriteRegister1_IN);
                     //$display("EXE:ALU_Control1=%x; MemRead1=%d; MemWrite1=%d (Data:%x)",ALU_Control1_IN, MemRead1_IN, MemWrite1_IN, MemWriteData1);

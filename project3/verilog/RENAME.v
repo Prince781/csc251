@@ -31,6 +31,7 @@ module RENAME
     input [`PROJ_LOG_PHYS-1:0] Free_phys_reg,
     input Free_reg_avail,
     input [`PROJ_NUM_ARCH_REGS-1:0] Busy_list,
+    input [5:0] ROB_free_entry,
     input ROB_full,
     input Issue_queue_full,
     input Load_store_queue_full,

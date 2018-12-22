@@ -14,6 +14,7 @@ module RegRead#(
     input [`LOG_PHYS - 1 : 0] RegWrite_IN,
     input [31:0] DataWrite_IN,
     input [0:0] Write_IN, // 0 = don't write, 1 = write
+    input [2:0] Read_IN,    // the registers we're reading
 
     input [`LOG_PHYS - 1 : 0] BusyReg_IN,
     input SetBusy_IN,
@@ -26,7 +27,10 @@ module RegRead#(
     output [31:0] RegValueB_OUT,
     output [31:0] RegValueC_OUT,
 
-    output reg [NUM_PHYS_REGS-1:0] Busy_list_OUT
+    output reg [NUM_PHYS_REGS-1:0] Busy_list_OUT,
+
+    output Free_reg_valid_OUT,
+    output [`LOG_PHYS - 1 : 0] Free_reg_OUT
 );
 
 	PhysRegFile  #(
@@ -41,6 +45,7 @@ module RegRead#(
         .RegWrite_IN(RegWrite_IN),
         .DataWrite_IN(DataWrite_IN),
         .Write_IN(Write_IN),
+        .Read_IN(Read_IN),
         .BusyReg_IN(BusyReg_IN),
         .SetBusy_IN(SetBusy_IN),
         .FreeReg_IN(FreeReg_IN),
@@ -48,7 +53,9 @@ module RegRead#(
         .RegValueA_OUT(RegValueA_OUT),
         .RegValueB_OUT(RegValueB_OUT),
         .RegValueC_OUT(RegValueC_OUT),
-        .Busy_list_OUT(Busy_list_OUT)
+        .Busy_list_OUT(Busy_list_OUT),
+        // .Free_reg_valid_OUT(Free_reg_valid_OUT),
+        // .Free_reg_OUT(Free_reg_OUT)
     );
     
     /* Write Me */

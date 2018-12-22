@@ -431,6 +431,7 @@ module MIPS (
         .Map_arch_to_phys(FRAT_ptrs),
         .Free_phys_reg(Free_phys_reg),
         .Free_reg_avail(Free_reg_avail),
+        .ROB_free_entry(Free_entry_ROB_RENAME),
         .Busy_list(Busy_list_RegRead_RENAME),
         .ROB_full(Full_ROB_RENAME),
         .Issue_queue_full(IQ_full),
@@ -495,6 +496,7 @@ module MIPS (
     // from IQ to EXE
     wire [`ISSUE_QUEUE_ENTRY_BITS-1:0] IQ_out;
     wire Instr1_Available_IQEXE;
+    wire [5:0]  ROB_entry_IQEXE                                 = IQ_out[168:163];
 	wire [31:0] Instr1_IQEXE                                    = IQ_out[162:131];
     wire [31:0] Instr1_PC_IQEXE                                 = IQ_out[130:99];
     wire [5:0]  ALU_Control1_IQEXE                              = IQ_out[98:93];
@@ -519,6 +521,7 @@ module MIPS (
 		.STALL_fMEM(STALL_fMEM),
 `endif
         .Instr1_Valid_IN(Instr1_Available_IQEXE),
+        .ROB_entry_IN(ROB_entry_IQEXE),
 		.Instr1_IN(Instr1_IQEXE),
 		.Instr1_PC_IN(Instr1_PC_IQEXE),
 `ifdef HAS_FORWARDING
@@ -545,6 +548,8 @@ module MIPS (
 		.ALU_Control1_OUT(ALU_Control1_EXEMEM),
 		.MemRead1_OUT(MemRead1_EXEMEM),
 		.MemWrite1_OUT(MemWrite1_EXEMEM),
+        .Instr1_Valid_OUT(Instr1_Available_EXEMEM),
+        .ROB_entry_OUT(ROB_entry_EXEMEM),
         .ReadyUpdate_OUT(ReadyUpdate_EXEIQ),
         .Want_Instr(Dequeue_EXEIQ)
 `ifdef HAS_FORWARDING
@@ -636,9 +641,15 @@ module MIPS (
     assign unused_d2 = block_write_fDM_valid;
 `endif
 
+    // EXE to MEM
+    wire Instr1_Available_EXEMEM;
+    wire [5:0] ROB_entry_EXEMEM;
+
     MEM MEM(
         .CLK(CLK),
         .RESET(RESET),
+        .ROB_entry_IN(ROB_entry_EXEMEM),
+        .Instr1_Valid_IN(Instr1_Available_EXEMEM),
         .Instr1_IN(Instr1_EXEMEM),
         .Instr1_PC_IN(Instr1_PC_EXEMEM),
         .ALU_result1_IN(ALU_result1_EXEMEM),
@@ -651,6 +662,8 @@ module MIPS (
         .WriteRegister1_OUT(WriteRegister1_MEMWB),
         .RegWrite1_OUT(RegWrite1_MEMWB),
         .WriteData1_OUT(WriteData1_MEMWB),
+        .ROB_update_OUT(ROB_update_MEMWB),
+        .ROB_entry_OUT(ROB_entry_MEMWB),
         .data_write_2DM(data_write_2DC),
         .data_address_2DM(data_address_2DC),
         .data_write_size_2DM(data_write_size_2DC),
@@ -668,6 +681,10 @@ module MIPS (
         .WriteData1_async(BypassData1_MEMID)
 `endif
     );
+
+    // MEM to ...
+    wire ROB_update_MEMWB;
+    wire [5:0] ROB_entry_MEMWB;
 
 `ifdef HAS_FORWARDING
     assign BypassReg1_MEMID = WriteRegister1_EXEMEM;
@@ -704,6 +721,7 @@ module MIPS (
     wire [31:0] Operand1_RegRead_EXE;
     wire [31:0] Operand2_RegRead_EXE;
 
+    wire [5:0] Free_entry_ROB_RENAME;
     wire Full_ROB_RENAME;
 
     RetireCommit RetireCommit(
@@ -711,9 +729,12 @@ module MIPS (
         .RESET(RESET),
         .ROB_entry_IN(Entry_RENAME_ROB),
         .ROB_entry_valid_IN(!RENAME_blocked),
+        .Update_ROB_IN(ROB_update_MEMWB),
+        .Update_entry_IN(ROB_entry_MEMWB),
+        .ROB_free_entry_OUT(Free_entry_ROB_RENAME),
+        .ROB_full_OUT(Full_ROB_RENAME),
         .Flush_OUT(),
         .RegPtrs_OUT(),
-        .ROB_full_OUT(Full_ROB_RENAME),
         .ROB_free_reg_OUT(Enqueue_entry_ROB_FL),
         .ROB_phys_reg_OUT(Entry_ROB_FL)
     );

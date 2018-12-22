@@ -19,6 +19,10 @@ module ROB #(
     input Entry_valid_IN,
     input [ENTRY_BITS-1:0] Entry_IN,
 
+    input Update_IN,
+    input [5:0] Update_entry_IN,
+
+    output reg [$clog2(SIZE)-1:0] Free_entry,
     output reg Full,                    // whether the ROB is full
 
     output [`LOG_ARCH-1:0] Arch_reg,
@@ -53,6 +57,7 @@ wire [`LOG_ARCH-1:0] tmp_Arch_reg;
 
 
 assign {tmp_ReadyCommit, Instr1, Instr1_PC, Alt_PC, Request_Alt_PC, tmp_RegUpdate, tmp_Phys_reg, tmp_Arch_reg} = queue[head];
+assign Free_entry = tail[5:0];
 
 always @(posedge CLK or negedge RESET) begin
     if (!RESET) begin
@@ -100,6 +105,9 @@ always @(posedge CLK or negedge RESET) begin
         end
 
         // finalizing an instruction
+        if (Update_IN) begin
+            queue[Update_entry_IN][`ROB_ENTRY_BITS-1] <= 1'b1;
+        end
     end
 end
 
