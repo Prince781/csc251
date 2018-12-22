@@ -1,0 +1,85 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[htt]{hyphenat}
+
+\title{CSC 2/451 - Project 3}
+\author{
+Yufei Du \\
+\texttt{<ydu14@ur.rochester.edu>}
+\and
+Princeton Ferro \\
+\texttt{<pferro@u.rochester.edu>}
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Configuration}
+We attempted to implement an out-of-order MIPS pipeline with stages shown in the assignment document. We added a Decode queue, a Rename queue, Rename stage with F-RAT, a Free list, an Issue queue, a Load/Store queue, a ROB, a RetireCommit stage with R-RAT, and a physical register file. To use these new structures and stages, we modified MIPS, ID, EXE, and MEM stages. We could not finish the implementation, and currently the code partially works.
+\subsection{Parts that work and can be tested}
+\begin{itemize}
+  \item Decode queue (Shown as "FIFO Fetch -> Decode:" in output) Note: Since FIFO is updated on negedge CLK, the printing message seems to be one cycle slower than other modules. This is expected.
+  \item Rename queue (Shown as "FIFO Decode -> Rename:" in output) Note: Since FIFO is updated on negedge CLK, the printing message seems to be one cycle slower than other modules. This is expected.
+  \item Baisc architectural to physical register renaming, including part of Rename stage in charge of instructions that write to register (Shown as "RENAME:" in output), Free list (shown as "Free List:" in output), and F-RAT (shown as "F-RAT:" in output)
+  \item Enqueue and select parts of Issue Queue (Shown as "Issue Queue:" in output)
+  \item part of EXE stage, not including ALU
+\end{itemize}
+\subsection{Parts that do not work}
+\begin{itemize}
+  \item load/store parts of Rename stage (load/store address is always 0)
+  \item rest of EXE stage, including ALU
+  \item MEM stage
+  \item RetireCommit stage
+\end{itemize}
+\subsection{Parts that cannot be tested}
+\begin{itemize}
+  \item Wake-up part of Issue Queue
+  \item Load/Store queue (Shown as "FIFO RENAME -> LSQ:" in output) Note: Since FIFO is updated on negedge CLK, the printing message seems to be one cycle slower than other modules. This is expected.
+  \item ROB and R-RAT
+  \item Physical register file, and RegRead module
+\end{itemize}
+
+\section{Added and Modified Components}
+\subsection{FIFO queue (Decode queue, Rename queue, Load/Store queue)}
+The FIFO module is a generic implementation of FIFO queue. It is used in Decode queue, Rename queue, and Load/Store queue. Decode queue, Rename queue, and Load/Store queue are different instances of this module with different queue size, entry size and/or name.
+
+\subsection{ID}
+Everything related to reading or writing registers were removed from ID stage. Originally, ID stage contained RegFile module and was in charge of reading registers and writing back values to registers. However, since out-of-order pipeline stores value in physical registers instead of architectural registers, ID should not have access to registers directly. Therefore, the values for register A and B are no longer in ID's output. Instead, immediate value and a boolean signal of whether an immediate value is supplied in the instruction were added to ID's output.
+
+\subsection{RAT}
+The RAT module is used in F-RAT and R-RAT. It stores the current mapping of architectural registers to physical registers. When updating, it takes in an architectural register and a physical register, and it maps the physical register to the architectural register. Its output is the current mapping.
+
+\subsection{RENAME}
+The RENAME module takes in an entry from Rename queue, and based on the instruction type, it puts the instruction on Issue queue, Load/Store queue (memory address is not implemented. Currently it is always 0), and/or ROB accordingly. If the instruction contains a register write, it also request a physical register from Free list and map it to F-RAT.
+
+\subsection{Free list}
+The Free list is a modified version of FIFO queue. During initialization, it enqueue all physical registers to the list because initially all physical registers are free. Also, if the queue needs to enqueue and dequeue at the same cycle, it will enqueue first and then dequeue because in the case that no register is in Free list, the enqueued register can be dequeued immediately, saving an extra cycle. Also, since the maximum number of registers will never exceed the size of Free list, it does not need to consider the case that the list is already full when trying to enqueue.
+
+\subsection{Issue queue}
+The Issue queue has 3 features: wake-up entries whose registers are ready, select the next entry to be passed to EXE stage, and enqueue new entry.
+\begin{itemize}
+  \item Wake-up: Given address of the register that becomes ready, the module will iterate through the queue, check each entry's register A and register B, update their ready bits if they match given register address, and update the entry's ready bit if both registers in this entry are ready.
+  \item Select: The module will select the first entry in the queue that is ready. Then, it will move all entries after selected entry forward to fill up the space.
+  \item Enqueue: The module will append the new entry at the end of the queue.
+\end{itemize}
+
+\subsection{Physical register file (PhysRegFile.v)}
+The Physical register file module stores values and busy bits of physical registers. The implementation is very similar to the provided Architectural register file (\texttt{RegFile.v}), but in addition to setting a register's value, the module can also set a register's busy bit.
+
+\subsection{EXE}
+
+\subsection{ALU}
+We did not make any change to ALU module. We thought that the ALU module should work as-is. Since we did not finish EXE module, we could not test if provided ALU module works or not.
+
+\subsection{MEM}
+
+\subsection{ROB}
+The ROB module is a modified version of FIFO queue. The enqueue part is similar to that of FIFO queue. The dequeue part will check if the ROB is currently empty. If it is not empty, and if the head entry is ready to commit, then the head entry will become the output.
+
+\subsection{RetireCommit}
+The RetireCommit module is not finished. It contains ROB and R-RAT. Currently it generates some output based on outputs from ROB and R-RAT, but it does not handle the result of execution (e.g. misprediction, jump, etc.).
+
+\end{document}

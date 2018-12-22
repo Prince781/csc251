@@ -158,9 +158,9 @@ always @(posedge CLK or negedge RESET) begin
                     MemWrite1_IN, MemWriteData1_IN,
                     MemRead1_IN};
                 Issue_queue_entry_valid <= 1;
-                Frat_arch_reg <= WriteRegister1_IN;
-                Frat_phy_reg <= Free_phys_reg;
-                Frat_update <= 1;
+                // Frat_arch_reg <= WriteRegister1_IN;
+                // Frat_phy_reg <= Free_phys_reg;
+                // Frat_update <= 1;
                 //Grabbed_regs = num_needed_regs;
                 ROB_entry <= {1'b0, Instr1_IN, Instr1_addr, Alt_PC, Request_Alt_PC, 1'b1, Free_phys_reg, WriteRegister1_IN};
                 Pop_from_id_fifo <= 1;
