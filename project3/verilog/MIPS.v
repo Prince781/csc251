@@ -185,20 +185,6 @@ module MIPS (
 	wire [31:0] WriteData1_MEMWB;
 	wire        RegWrite1_MEMWB;
 
-	wire [31:0] Instr1_IDEXE;
-    wire [31:0] Instr1_PC_IDEXE;
-`ifdef HAS_FORWARDING
-    wire [4:0]  RegisterA1_IDEXE;
-    wire [4:0]  RegisterB1_IDEXE;
-`endif
-    wire [4:0]  WriteRegister1_IDEXE;
-    wire [31:0] MemWriteData1_IDEXE;
-    wire        RegWrite1_IDEXE;
-    wire [5:0]  ALU_Control1_IDEXE;
-    wire        MemRead1_IDEXE;
-    wire        MemWrite1_IDEXE;
-    wire [4:0]  ShiftAmount1_IDEXE;
-
 `ifdef HAS_FORWARDING
     wire [4:0]  BypassReg1_EXEID;
     wire [31:0] BypassData1_EXEID;
@@ -447,7 +433,7 @@ module MIPS (
         .Free_reg_avail(Free_reg_avail),
         .Busy_list(Busy_list_RegRead_RENAME),
         .ROB_full(Full_ROB_RENAME),
-        .Issue_queue_full(),
+        .Issue_queue_full(IQ_full),
         .Load_store_queue_full(Blocked_LSQ),
         .Issue_queue_entry(Entry_RENAME_IQ),
         .Issue_queue_entry_valid(Entry_valid_RENAME_IQ),
@@ -462,26 +448,13 @@ module MIPS (
         .Frat_update(WriteReg_RENAME_FRAT)
     );
 
-    IssueQueue IQ(
-        .CLK(CLK),
-        .RESET(RESET),
-        .Enqueue_IN(Entry_valid_RENAME_IQ),
-        .ReadyUpdate_IN(),
-        .ReadyRegister_IN(),
-        .IssueQueueEntry_IN(Entry_RENAME_IQ),
-        .Dequeue_IN(),
-        .DequeueResult_OUT(),
-        .EnqueueResult_OUT(),
-        .Full_OUT(),
-        .IssueQueueEntry_OUT()
-    );
-
     // from LSQ to RENAME
     wire Blocked_LSQ;
     wire [`LOAD_STORE_QUEUE_ENTRY_BITS-1:0] Entry_LSQ_MEM;
     wire Entry_valid_LSQ_MEM;
     wire Popping_MEM_LSQ;
 
+    // TODO: replace with LSQ module, and place between MEM and EXE
     FIFO #(16, `LOAD_STORE_QUEUE_ENTRY_BITS, "RENAME", "LSQ") LSQ(
         .CLK(CLK),
         .RESET(RESET),
@@ -493,18 +466,51 @@ module MIPS (
         .pop_must_wait(Entry_valid_LSQ_MEM)
     );
 
-    
-
     FreeList #(`PROJ_NUM_PHYS_REGS) FL(
         .CLK(CLK),
         .RESET(RESET),
         .Enqueue_IN(Enqueue_entry_ROB_FL),
         .Data_IN(Entry_ROB_FL),
-        //.Dequeue_IN(WriteRegister1_IDRENAME),
         .Dequeue_IN(Dequeue_entry_RENAME_FL),
         .DequeueResult_OUT(Free_reg_avail),
         .Data_OUT(Free_phys_reg)
     );
+
+    IssueQueue IQ(
+        .CLK(CLK),
+        .RESET(RESET),
+        .Enqueue_IN(Entry_valid_RENAME_IQ),
+        .ReadyUpdate_IN(ReadyUpdate_EXEIQ),
+        .ReadyRegister_IN(ReadyRegister_EXEIQ),
+        .IssueQueueEntry_IN(Entry_RENAME_IQ),
+        .Dequeue_IN(Dequeue_EXEIQ),
+        .DequeueResult_OUT(Instr1_Available_IQEXE),
+        .Full_OUT(IQ_full),
+        .IssueQueueEntry_OUT(IQ_out)
+    );
+
+    // from IQ to RENAME
+    wire IQ_full;
+
+    // from IQ to EXE
+    wire [`ISSUE_QUEUE_ENTRY_BITS-1:0] IQ_out;
+    wire Instr1_Available_IQEXE;
+	wire [31:0] Instr1_IQEXE                                    = IQ_out[162:131];
+    wire [31:0] Instr1_PC_IQEXE                                 = IQ_out[130:99];
+    wire [5:0]  ALU_Control1_IQEXE                              = IQ_out[98:93];
+    wire        HasImmediate_IQEXE                              = IQ_out[92];
+    wire [31:0] Immediate_IQEXE                                 = IQ_out[91:60];
+    // these are now physical registers
+    wire [`PROJ_LOG_PHYS-1:0] ReadRegister1_IQEXE               = IQ_out[59:54];
+    wire        ReadRegister1_Ready_IQEXE                       = IQ_out[53];
+    wire [`PROJ_LOG_PHYS-1:0] ReadRegister2_IQEXE               = IQ_out[52:47];
+    wire        ReadRegister2_Ready_IQEXE                       = IQ_out[46];
+    wire [4:0]  ShiftAmount1_IQEXE                              = IQ_out[45:41];
+    wire        RegWrite1_IQEXE                                 = IQ_out[40];
+    wire [`PROJ_LOG_PHYS-1:0]  WriteRegister1_IQEXE             = IQ_out[39:34];
+    wire        MemWrite1_IQEXE                                 = IQ_out[33];
+    wire [31:0] MemWriteData1_IQEXE                             = IQ_out[32:1];
+    wire        MemRead1_IQEXE                                  = IQ_out[0];
 
 	EXE EXE(
 		.CLK(CLK),
@@ -512,19 +518,24 @@ module MIPS (
 `ifdef USE_DCACHE
 		.STALL_fMEM(STALL_fMEM),
 `endif
-		.Instr1_IN(Instr1_IDEXE),
-		.Instr1_PC_IN(Instr1_PC_IDEXE),
+        .Instr1_Valid_IN(Instr1_Available_IQEXE),
+		.Instr1_IN(Instr1_IQEXE),
+		.Instr1_PC_IN(Instr1_PC_IQEXE),
 `ifdef HAS_FORWARDING
-		.RegisterA1_IN(RegisterA1_IDEXE),
-		.RegisterB1_IN(RegisterB1_IDEXE),
+		.RegisterA1_IN(ReadRegister1_IQEXE),
+		.RegisterB1_IN(ReadRegister2_IQEXE),
 `endif
-		.WriteRegister1_IN(WriteRegister1_IDEXE),
-		.MemWriteData1_IN(MemWriteData1_IDEXE),
-		.RegWrite1_IN(RegWrite1_IDEXE),
-		.ALU_Control1_IN(ALU_Control1_IDEXE),
-		.MemRead1_IN(MemRead1_IDEXE),
-		.MemWrite1_IN(MemWrite1_IDEXE),
-		.ShiftAmount1_IN(ShiftAmount1_IDEXE),
+        .OperandA1_IN(Operand1_RegRead_EXE),
+        .OperandB1_IN(Operand2_RegRead_EXE),
+        .HasImmediate_IN(HasImmediate_IQEXE),
+        .Immediate_IN(Immediate_IQEXE),
+		.WriteRegister1_IN(WriteRegister1_IQEXE),
+		.MemWriteData1_IN(MemWriteData1_IQEXE),
+		.RegWrite1_IN(RegWrite1_IQEXE),
+		.ALU_Control1_IN(ALU_Control1_IQEXE),
+		.MemRead1_IN(MemRead1_IQEXE),
+		.MemWrite1_IN(MemWrite1_IQEXE),
+		.ShiftAmount1_IN(ShiftAmount1_IQEXE),
 		.Instr1_OUT(Instr1_EXEMEM),
 		.Instr1_PC_OUT(Instr1_PC_EXEMEM),
 		.ALU_result1_OUT(ALU_result1_EXEMEM),
@@ -533,7 +544,9 @@ module MIPS (
 		.RegWrite1_OUT(RegWrite1_EXEMEM),
 		.ALU_Control1_OUT(ALU_Control1_EXEMEM),
 		.MemRead1_OUT(MemRead1_EXEMEM),
-		.MemWrite1_OUT(MemWrite1_EXEMEM)
+		.MemWrite1_OUT(MemWrite1_EXEMEM),
+        .ReadyUpdate_OUT(ReadyUpdate_EXEIQ),
+        .Want_Instr(Dequeue_EXEIQ)
 `ifdef HAS_FORWARDING
 		,
 		.BypassReg1_MEMEXE(WriteRegister1_MEMWB),
@@ -544,8 +557,15 @@ module MIPS (
 `endif
 	);
 
+    // stuff from EXE to IQ
+    wire Dequeue_EXEIQ;
+    wire [4:0] ReadyRegister_EXEIQ;
+    wire ReadyUpdate_EXEIQ;
+
+    assign ReadyRegister_EXEIQ = WriteRegister1_EXEMEM;
+
 `ifdef HAS_FORWARDING
-    assign BypassReg1_EXEID = WriteRegister1_IDEXE;
+    //assign BypassReg1_EXEID = WriteRegister1_IDEXE;
     assign BypassData1_EXEID = ALU_result_async1;
     assign BypassValid1_EXEID = ALU_result_async_valid1;
 `endif
@@ -664,33 +684,42 @@ module MIPS (
     RegRead #(`PROJ_NUM_PHYS_REGS) RegRead(
         .CLK(CLK),
         .RESET(RESET),
-        .RegAddrA_IN(),
-        .RegAddrB_IN(),
+        .RegAddrA_IN(ReadRegister1_IQEXE),
+        .RegAddrB_IN(ReadRegister2_IQEXE),
         .RegAddrC_IN(),
         .RegWrite_IN(),
-        .DataWrite_IN(),
-        .Write_IN(),
-        .BusyReg_IN(),
-        .SetBusy_IN(),
-        .BusyValue_IN(),
-        .RegValueA_OUT(),
-        .RegValueB_OUT(),
+        .DataWrite_IN(WriteData1_MEMWB),
+        .Write_IN(RegWrite1_MEMWB),
+        .BusyReg_IN(WriteRegister1_IQEXE),
+        .SetBusy_IN(RegWrite1_IQEXE),
+        .FreeReg_IN(FreeReg_ROB_RegRead),
+        .SetFree_IN(SetFree_ROB_RegRead),
+        .RegValueA_OUT(Operand1_RegRead_EXE),
+        .RegValueB_OUT(Operand2_RegRead_EXE),
         .RegValueC_OUT(),
         .Busy_list_OUT(Busy_list_RegRead_RENAME)
     );
+
+    // from RegRead to EXE
+    wire [31:0] Operand1_RegRead_EXE;
+    wire [31:0] Operand2_RegRead_EXE;
 
     wire Full_ROB_RENAME;
 
     RetireCommit RetireCommit(
         .CLK(CLK),
         .RESET(RESET),
-        .ROB_entry_IN(),
-        .ROB_entry_invalid_IN(),
+        .ROB_entry_IN(Entry_RENAME_ROB),
+        .ROB_entry_valid_IN(!RENAME_blocked),
         .Flush_OUT(),
         .RegPtrs_OUT(),
         .ROB_full_OUT(Full_ROB_RENAME),
         .ROB_free_reg_OUT(Enqueue_entry_ROB_FL),
         .ROB_phys_reg_OUT(Entry_ROB_FL)
     );
+
+    // from RetireCommit to RegRead
+    wire SetFree_ROB_RegRead = Enqueue_entry_ROB_FL;
+    wire [`PROJ_LOG_PHYS-1:0] FreeReg_ROB_RegRead = Entry_ROB_FL;
 `endif
 endmodule

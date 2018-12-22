@@ -17,7 +17,9 @@ module PhysRegFile #(
 
     input [`LOG_PHYS - 1 : 0] BusyReg_IN,
     input SetBusy_IN,
-    input BusyValue_IN,
+
+    input [`LOG_PHYS - 1 : 0] FreeReg_IN,
+    input SetFree_IN,
 
     output [31:0] RegValueA_OUT,
     output [31:0] RegValueB_OUT,
@@ -32,7 +34,7 @@ module PhysRegFile #(
     assign RegValueA_OUT = PReg[RegAddrA_IN];
     assign RegValueB_OUT = PReg[RegAddrB_IN];
     assign RegValueC_OUT = PReg[RegAddrC_IN];
-    always @(posedge CLK or negedge RESET) begin
+    always @(negedge CLK or negedge RESET) begin
 	    if (!RESET) begin
             temp = 0;
             while (temp < NUM_PHYS_REGS) begin
@@ -42,9 +44,15 @@ module PhysRegFile #(
         end
         if (Write_IN) begin
             PReg[RegWrite_IN] <= DataWrite_IN;
+            $display("PhysRegFile: PReg[%d] <= %x (%d)", RegWrite_IN, DataWrite_IN, DataWrite_IN);
         end
         if (SetBusy_IN) begin
-            Busy_list_OUT[BusyReg_IN] <= BusyValue_IN;
+            Busy_list_OUT[BusyReg_IN] <= 1;
+            $display("PhysRegFile: PReg[%d] set to busy", BusyReg_IN);
+        end
+        if (SetFree_IN) begin
+            Busy_list_OUT[FreeReg_IN] <= 0;
+            $display("PhysRegFile: PReg[%d] set to free", FreeReg_IN);
         end
     end
 

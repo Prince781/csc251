@@ -17,7 +17,10 @@ module RegRead#(
 
     input [`LOG_PHYS - 1 : 0] BusyReg_IN,
     input SetBusy_IN,
-    input BusyValue_IN,
+
+    input [`LOG_PHYS - 1 : 0] FreeReg_IN,
+    input SetFree_IN,
+
 
     output [31:0] RegValueA_OUT,
     output [31:0] RegValueB_OUT,
@@ -40,7 +43,8 @@ module RegRead#(
         .Write_IN(Write_IN),
         .BusyReg_IN(BusyReg_IN),
         .SetBusy_IN(SetBusy_IN),
-        .BusyValue_IN(BusyValue_IN),
+        .FreeReg_IN(FreeReg_IN),
+        .SetFree_IN(SetFree_IN),
         .RegValueA_OUT(RegValueA_OUT),
         .RegValueB_OUT(RegValueB_OUT),
         .RegValueC_OUT(RegValueC_OUT),

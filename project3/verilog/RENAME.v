@@ -60,7 +60,7 @@ wire num_needed_regs = WriteRegister1_IN != 0;
 always @(posedge CLK or negedge RESET) begin
     Blocked <= 0;
     Frat_update <= 0;
-    Grabbed_regs = 0;
+    Grabbed_regs <= 0;
     Issue_queue_entry_valid <= 0;
     Load_store_queue_entry_valid <= 0;
     if (!RESET) begin
@@ -68,7 +68,7 @@ always @(posedge CLK or negedge RESET) begin
         Issue_queue_entry <= 0;
         Load_store_queue_entry <= 0;
         ROB_entry <= 0;
-        Grabbed_regs = 0;
+        Grabbed_regs <= 0;
         Blocked <= 1;    /* ??? TODO */
         Pop_from_id_fifo <= 0;
         blocked_reason <= 0;
@@ -90,7 +90,7 @@ always @(posedge CLK or negedge RESET) begin
             if (Free_reg_avail < num_needed_regs) begin
                 $display("RENAME: blocked while waiting for free registers. #Free Registers: %d, #Required registers: %d", Free_reg_avail, num_needed_regs);
                 Blocked <= 1;
-                Grabbed_regs = num_needed_regs;
+                Grabbed_regs <= num_needed_regs;
                 Pop_from_id_fifo <= 0;
                 blocked_reason <= `WAIT_FL;
             end else if (Issue_queue_full) begin
@@ -117,13 +117,16 @@ always @(posedge CLK or negedge RESET) begin
                     end
                 end
                 if (!MemRead1_IN || !Load_store_queue_full) begin
-                    Issue_queue_entry <= {ALU_Control1_IN,
+                    Issue_queue_entry <= {
+                        Instr1_IN, Instr1_addr,
+                        ALU_Control1_IN,
                         HasImmediate_IN, Immediate_IN,
-                        ReadRegisterA1_IN == 0 ? 6'd0 : Map_arch_to_phys[ReadRegisterA1_IN], HasImmediate_IN | (ReadRegisterA1_IN == 0 && Busy_list[ReadRegisterA1_IN] == 0),
-                        ReadRegisterB1_IN == 0? 6'd0 : Map_arch_to_phys[ReadRegisterB1_IN], HasImmediate_IN | (ReadRegisterB1_IN == 0 && Busy_list[ReadRegisterB1_IN] == 0),
+                        Map_arch_to_phys[ReadRegisterA1_IN], HasImmediate_IN || Busy_list[ReadRegisterA1_IN] == 0,
+                        Map_arch_to_phys[ReadRegisterB1_IN], HasImmediate_IN || Busy_list[ReadRegisterB1_IN] == 0,
                         ShiftAmount1_IN,
                         1'b1, Free_phys_reg,
-                        MemWrite1_IN, MemRead1_IN};
+                        MemWrite1_IN, MemWriteData1_IN,
+                        MemRead1_IN};
                     Issue_queue_entry_valid <= 1;
                     //Grabbed_regs = num_needed_regs;
                     ROB_entry <= {1'b0, Instr1_IN, Instr1_addr, Alt_PC, Request_Alt_PC, 1'b1, Free_phys_reg, WriteRegister1_IN};
@@ -144,13 +147,16 @@ always @(posedge CLK or negedge RESET) begin
             end else begin
                 Load_store_queue_entry <= {1'b1,1'b0,ReadRegisterA1_IN == 0 ? 6'd0 : Map_arch_to_phys[ReadRegisterA1_IN],32'd0};
                 Load_store_queue_entry_valid <= 1;
-                Issue_queue_entry <= {ALU_Control1_IN,
+                Issue_queue_entry <= {
+                    Instr1_IN, Instr1_addr,
+                    ALU_Control1_IN,
                     HasImmediate_IN, Immediate_IN,
-                    ReadRegisterA1_IN == 0 ? 6'd0 : Map_arch_to_phys[ReadRegisterA1_IN], HasImmediate_IN | (ReadRegisterA1_IN == 0&& Busy_list[ReadRegisterA1_IN] == 0),
-                    ReadRegisterB1_IN == 0? 6'd0 : Map_arch_to_phys[ReadRegisterB1_IN], HasImmediate_IN | (ReadRegisterB1_IN == 0 && Busy_list[ReadRegisterB1_IN] == 0),
+                    Map_arch_to_phys[ReadRegisterA1_IN], HasImmediate_IN || Busy_list[ReadRegisterA1_IN] == 0,
+                    Map_arch_to_phys[ReadRegisterB1_IN], HasImmediate_IN || Busy_list[ReadRegisterB1_IN] == 0,
                     ShiftAmount1_IN,
                     6'd0, 1'b0,
-                    MemWrite1_IN, MemRead1_IN};
+                    MemWrite1_IN, MemWriteData1_IN,
+                    MemRead1_IN};
                 Issue_queue_entry_valid <= 1;
                 Frat_arch_reg <= WriteRegister1_IN;
                 Frat_phy_reg <= Free_phys_reg;
@@ -162,13 +168,16 @@ always @(posedge CLK or negedge RESET) begin
                 $display("RENAME: instr stores to memory");
             end
         end else begin                      // this instruction is something else, like a branch or jump
-            Issue_queue_entry <= {ALU_Control1_IN,
+            Issue_queue_entry <= {
+                Instr1_IN, Instr1_addr,
+                ALU_Control1_IN,
                 HasImmediate_IN, Immediate_IN,
-                ReadRegisterA1_IN == 0? 6'd0 : Map_arch_to_phys[ReadRegisterA1_IN], HasImmediate_IN | (ReadRegisterA1_IN == 0 && Busy_list[ReadRegisterA1_IN] == 0),
-                ReadRegisterB1_IN == 0? 6'd0 : Map_arch_to_phys[ReadRegisterB1_IN], HasImmediate_IN | (ReadRegisterB1_IN == 0 && Busy_list[ReadRegisterB1_IN] == 0),
+                Map_arch_to_phys[ReadRegisterA1_IN], HasImmediate_IN || Busy_list[ReadRegisterA1_IN] == 0,
+                Map_arch_to_phys[ReadRegisterB1_IN], HasImmediate_IN || Busy_list[ReadRegisterB1_IN] == 0,
                 ShiftAmount1_IN,
                 1'b0, 6'd0,
-                MemWrite1_IN, MemRead1_IN};
+                MemWrite1_IN, MemWriteData1_IN,
+                MemRead1_IN};
             Issue_queue_entry_valid <= 1;
             //Grabbed_regs = num_needed_regs;
             ROB_entry <= {1'b0, Instr1_IN, Instr1_addr, Alt_PC, Request_Alt_PC, 1'b0, 6'd0, WriteRegister1_IN};

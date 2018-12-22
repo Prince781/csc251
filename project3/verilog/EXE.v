@@ -25,6 +25,8 @@ module EXE(
     //Pipeline is stalling (ask MEM for details)
 	 input STALL_fMEM,
 `endif
+    input Instr1_Valid_IN,
+
 	 //Current instruction [debug]
     input [31:0] Instr1_IN,
     //Current instruction's PC [debug]
@@ -41,6 +43,8 @@ module EXE(
 `endif
     //Operand B (if already known)
     input [31:0] OperandB1_IN,
+    input HasImmediate_IN,
+    input [31:0] Immediate_IN,
     //Destination register
     input [4:0] WriteRegister1_IN,
     //Data in MemWrite1 register
@@ -72,7 +76,11 @@ module EXE(
     //We need to read from MEM (passed to MEM)
     output reg MemRead1_OUT,
     //We need to write to MEM (passed to MEM)
-    output reg MemWrite1_OUT
+    output reg MemWrite1_OUT,
+
+    output reg ReadyUpdate_OUT,
+
+    output reg Want_Instr
     
 `ifdef HAS_FORWARDING
     ,
@@ -92,6 +100,7 @@ module EXE(
 	 wire [31:0] A1;
 	 wire [31:0] B1;
 	 wire[31:0]ALU_result1;
+     wire [31:0] operand1 = HasImmediate_IN ? Immediate_IN : OperandA1_IN;
 	 	 
 	 wire comment1;
 	 assign comment1 = 1;
@@ -99,7 +108,7 @@ module EXE(
 `ifdef HAS_FORWARDING
 RegValue2 RegAValue(
     .ReadRegister1(RegisterA1_IN), 
-    .RegisterData1(OperandA1_IN), 
+    .RegisterData1(operand1), 
     .WriteRegister1stPri1(WriteRegister1_OUT), 
     .WriteData1stPri1(ALU_result1_OUT), 
     .Valid1stPri1(RegWrite1_OUT && !(MemRead1_OUT || MemWrite1_OUT)), 
@@ -123,7 +132,7 @@ RegValue2 RegBValue(
 	 .comment(1'b0)
     );
 `else
-assign A1 = OperandA1_IN;
+assign A1 = operand1; // OperandA1_IN;
 assign B1 = OperandB1_IN;
 `endif
 
@@ -185,29 +194,38 @@ always @(posedge CLK or negedge RESET) begin
 		ALU_Control1_OUT <= 0;
 		MemRead1_OUT <= 0;
 		MemWrite1_OUT <= 0;
+        ReadyUpdate_OUT <= 0;
+        Want_Instr <= 1;
 		$display("EXE:RESET");
 	end else if(CLK) begin
        HI <= new_HI;
        LO <= new_LO;
 `ifdef USE_DCACHE
 		if(STALL_fMEM) begin
+            Want_Instr <= 0;
             $display("EXE[STALL_fMEM]:Instr1_OUT=%x,Instr1_PC_OUT=%x", Instr1_OUT, Instr1_PC_OUT);
 		end else begin
 `endif
-            Instr1_OUT <= Instr1_IN;
-            Instr1_PC_OUT <= Instr1_PC_IN;
-            ALU_result1_OUT <= ALU_result1;
-            WriteRegister1_OUT <= WriteRegister1_IN;
-            MemWriteData1_OUT <= MemWriteData1;
-            RegWrite1_OUT <= RegWrite1_IN;
-            ALU_Control1_OUT <= ALU_Control1_IN;
-            MemRead1_OUT <= MemRead1_IN;
-            MemWrite1_OUT <= MemWrite1_IN;
-			if(comment1) begin
-                $display("EXE:Instr1=%x,Instr1_PC=%x,ALU_result1=%x; Write?%d to %d",Instr1_IN,Instr1_PC_IN,ALU_result1, RegWrite1_IN, WriteRegister1_IN);
-                //$display("EXE:ALU_Control1=%x; MemRead1=%d; MemWrite1=%d (Data:%x)",ALU_Control1_IN, MemRead1_IN, MemWrite1_IN, MemWriteData1);
-                //$display("EXE:OpA1=%x; OpB1=%x; HI=%x; LO=%x", A1, B1, new_HI,new_LO);
-			end
+            Want_Instr <= 1;
+            if (!Instr1_Valid_IN) begin
+                $display("EXE: waiting for instruction");
+            end else begin
+                Instr1_OUT <= Instr1_IN;
+                Instr1_PC_OUT <= Instr1_PC_IN;
+                ALU_result1_OUT <= ALU_result1;
+                WriteRegister1_OUT <= WriteRegister1_IN;
+                MemWriteData1_OUT <= MemWriteData1;
+                RegWrite1_OUT <= RegWrite1_IN;
+                ALU_Control1_OUT <= ALU_Control1_IN;
+                MemRead1_OUT <= MemRead1_IN;
+                MemWrite1_OUT <= MemWrite1_IN;
+                ReadyUpdate_OUT <= 1'b1;        // TODO: should this always be 1?
+                if(comment1) begin
+                    $display("EXE:Instr1=%x,Instr1_PC=%x,ALU_result1=%x; Write?%d to %d",Instr1_IN,Instr1_PC_IN,ALU_result1, RegWrite1_IN, WriteRegister1_IN);
+                    //$display("EXE:ALU_Control1=%x; MemRead1=%d; MemWrite1=%d (Data:%x)",ALU_Control1_IN, MemRead1_IN, MemWrite1_IN, MemWriteData1);
+                    //$display("EXE:OpA1=%x; OpB1=%x; HI=%x; LO=%x", A1, B1, new_HI,new_LO);
+                end
+            end
 `ifdef USE_DCACHE
 		end
 `endif

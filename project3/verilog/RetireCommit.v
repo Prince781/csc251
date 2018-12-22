@@ -21,7 +21,7 @@ module  RetireCommit #(
     input RESET,
 
     input [ROB_ENTRY_BITS-1:0] ROB_entry_IN,
-    input ROB_entry_invalid_IN,
+    input ROB_entry_valid_IN,
 
     output ROB_full_OUT,
 
@@ -32,7 +32,6 @@ module  RetireCommit #(
     output [`LOG_PHYS-1:0] ROB_phys_reg_OUT
 );/*verilator public_module*/
 
-wire ROB_entry_valid = !ROB_entry_invalid_IN;
 wire update_ROB_RRAT;
 wire ROB_full;
 
@@ -54,7 +53,7 @@ assign Flush_OUT = 1'b0;    // TODO
 ROB #(64, ROB_ENTRY_BITS, NUM_ARCH_REGS, NUM_PHYS_REGS) ROB(
     .CLK(CLK),
     .RESET(RESET),
-    .Entry_valid_IN(ROB_entry_valid),
+    .Entry_valid_IN(ROB_entry_valid_IN),
     .Entry_IN(ROB_entry_IN),
     .Full(ROB_full),
     .Arch_reg(Arch_reg),

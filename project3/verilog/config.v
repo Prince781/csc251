@@ -38,7 +38,7 @@
 /* src1/src2 = ReadRegisterA1/ReadRegisterB1 */
 /* src1/src2 val = OperandA1/OperandB1 */
 /* anything in the issue queue has regwrite guaranteed */
-`define ISSUE_QUEUE_ENTRY_BITS (6 /* ALU op */ + 1 /* has immediate? */ + 32 /* immediate */ + `PROJ_LOG_PHYS /* src1 reg */ + 1 /* src1 ready? */ + `PROJ_LOG_PHYS /* src2 */ + 1 /* src2 ready? */ + 5 /* shift amount */ + 1 /* regwrite? */ +  `PROJ_LOG_PHYS /* dest */ + 1 /* memwrite? */ + 1 /* memread? */)
+`define ISSUE_QUEUE_ENTRY_BITS (32 /* instr */ + 32 /* PC */ + 6 /* ALU op */ + 1 /* has immediate? */ + 32 /* immediate */ + `PROJ_LOG_PHYS /* src1 reg */ + 1 /* src1 ready? */ + `PROJ_LOG_PHYS /* src2 */ + 1 /* src2 ready? */ + 5 /* shift amount */ + 1 /* regwrite? */ +  `PROJ_LOG_PHYS /* dest */ + 1 /* memwrite? */ + 32 /* memwritedata */ + 1 /* memread? */)
 
 `define LOAD_STORE_QUEUE_ENTRY_BITS (1 /* 0 = load, 1 = store */ + 1 /* ready? */ + `PROJ_LOG_PHYS /* dest/src */ + 32 /* addr */)
 
