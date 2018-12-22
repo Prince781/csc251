@@ -21,8 +21,14 @@ Princeton Ferro \\
 We attempted to implement an out-of-order MIPS pipeline with stages shown in the assignment document. We added a Decode queue, a Rename queue, Rename stage with F-RAT, a Free list, an Issue queue, a Load/Store queue, a ROB, a RetireCommit stage with R-RAT, and a physical register file. To use these new structures and stages, we modified MIPS, ID, EXE, and MEM stages. We could not finish the implementation, and currently the code partially works.
 \subsection{Parts that work and can be tested}
 \begin{itemize}
-  \item Decode queue (Shown as "FIFO Fetch -> Decode:" in output) Note: Since FIFO is updated on negedge CLK, the printing message seems to be one cycle slower than other modules. This is expected.
-  \item Rename queue (Shown as "FIFO Decode -> Rename:" in output) Note: Since FIFO is updated on negedge CLK, the printing message seems to be one cycle slower than other modules. This is expected.
+  \item Decode queue (Shown as "FIFO Fetch -> Decode:" in output)
+    \begin{sloppypar}
+      Note: Since FIFO is updated on negedge CLK, the printing message seems to be one cycle slower than other modules. This is expected behavior.
+    \end{sloppypar}
+  \item Rename queue (Shown as "FIFO Decode -> Rename:" in output)
+    \begin{sloppypar}
+      Note: Since FIFO is updated on negedge CLK, the printing message seems to be one cycle slower than other modules. This is expected behavior.
+    \end{sloppypar}
   \item Baisc architectural to physical register renaming, including part of Rename stage in charge of instructions that write to register (Shown as "RENAME:" in output), Free list (shown as "Free List:" in output), and F-RAT (shown as "F-RAT:" in output)
   \item Enqueue and select parts of Issue Queue (Shown as "Issue Queue:" in output)
   \item part of EXE stage, not including ALU
@@ -37,7 +43,10 @@ We attempted to implement an out-of-order MIPS pipeline with stages shown in the
 \subsection{Parts that cannot be tested}
 \begin{itemize}
   \item Wake-up part of Issue Queue
-  \item Load/Store queue (Shown as "FIFO RENAME -> LSQ:" in output) Note: Since FIFO is updated on negedge CLK, the printing message seems to be one cycle slower than other modules. This is expected.
+  \item Load/Store queue (Shown as "FIFO RENAME -> LSQ:" in output)
+    \begin{sloppypar}
+      Note: Since FIFO is updated on negedge CLK, the printing message seems to be one cycle slower than other modules. This is expected behavior.
+    \end{sloppypar}
   \item ROB and R-RAT
   \item Physical register file, and RegRead module
 \end{itemize}
