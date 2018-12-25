@@ -78,6 +78,8 @@ The Issue queue has 3 features: wake-up entries whose registers are ready, selec
 \subsection{Physical register file (PhysRegFile.v)}
 The Physical register file module stores values and busy bits of physical registers. The implementation is very similar to the provided Architectural register file (\texttt{RegFile.v}), but in addition to setting a register's value, the module can also set a register's busy bit.
 
+Without reference counting or some other strategy implemented, registers immediately go back on the free list after an instruction has finished. Of course, this is the wrong thing to do, it's just that we didn't get to finish.
+
 \subsection{EXE}
 
 \subsection{ALU}
